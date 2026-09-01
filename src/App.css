@@ -112,6 +112,7 @@
   border-radius: 1rem;
   padding: 0;
   color: var(--text);
+  text-decoration: none;
   background: var(--surface);
   text-align: left;
   cursor: pointer;
