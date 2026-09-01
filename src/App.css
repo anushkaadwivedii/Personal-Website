@@ -1,0 +1,378 @@
+.landing-page {
+  display: flex;
+  position: relative;
+  width: 100%;
+  min-height: 100svh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2rem, 5vw, 4rem);
+  overflow: hidden;
+  padding: clamp(1.5rem, 5vw, 4rem);
+
+  background:
+    linear-gradient(
+      rgba(101, 230, 243, 0.035) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(101, 230, 243, 0.035) 1px,
+      transparent 1px
+    ),
+    radial-gradient(
+      circle at 25% 30%,
+      rgba(244, 189, 104, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 75% 30%,
+      rgba(101, 230, 243, 0.1),
+      transparent 35%
+    );
+
+  background-size:
+    3.5rem 3.5rem,
+    3.5rem 3.5rem,
+    auto,
+    auto;
+}
+
+/* Keep the content above the background */
+
+.landing-header,
+.portal-options {
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+
+.landing-header {
+  max-width: 48rem;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 1rem;
+  color: var(--primary);
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.landing-header h1 {
+  margin: 0;
+  color: transparent;
+  background: linear-gradient(
+    90deg,
+    var(--accent) 0%,
+    var(--secondary) 48%,
+    var(--primary) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  font-size: clamp(3.25rem, 8vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  filter: drop-shadow(
+    0 0 1.5rem rgba(101, 230, 243, 0.12)
+  );
+}
+
+.landing-prompt {
+  margin: 1.25rem 0 0;
+  color: var(--text);
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 600;
+}
+
+.landing-description {
+  margin: 0.65rem auto 0;
+  color: var(--text-muted);
+  font-size: clamp(0.85rem, 1.5vw, 1rem);
+  line-height: 1.6;
+}
+
+/* Portal layout */
+
+.portal-options {
+  display: grid;
+  width: min(100%, 64rem);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 3vw, 2rem);
+}
+
+.portal-option {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: 15rem auto;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0;
+  color: var(--text);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.portal-option:hover {
+  transform: translateY(-0.4rem);
+}
+
+.portal-option:focus-visible {
+  outline: 0.2rem solid var(--primary);
+  outline-offset: 0.25rem;
+}
+
+.classic-portal:hover {
+  border-color: var(--accent);
+  box-shadow: 0 1rem 3rem rgba(244, 189, 104, 0.12);
+}
+
+.city-portal:hover {
+  border-color: var(--primary);
+  box-shadow: 0 1rem 3rem rgba(101, 230, 243, 0.15);
+}
+
+/* Portal previews */
+
+.portal-preview {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+.portal-copy {
+  padding: 1.25rem;
+}
+
+.portal-number {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.portal-copy h2 {
+  margin: 0.4rem 0 0.65rem;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.portal-copy p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* Elevator portal */
+
+.elevator-preview {
+  background:
+    radial-gradient(
+      circle at 50% 5%,
+      rgba(244, 189, 104, 0.22),
+      transparent 30%
+    ),
+    var(--surface-alt);
+}
+
+.elevator-door {
+  position: absolute;
+  top: 2.5rem;
+  bottom: 0;
+  width: 42%;
+  border: 1px solid var(--accent);
+
+  background: linear-gradient(
+    90deg,
+    #171b33,
+    #2b304c,
+    #171b33
+  );
+
+  transition:
+    transform 500ms ease,
+    box-shadow 300ms ease;
+}
+
+.left-door {
+  left: 8%;
+}
+
+.right-door {
+  right: 8%;
+}
+
+.elevator-light {
+  position: absolute;
+  top: 1.1rem;
+  left: 50%;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 1.5rem var(--accent);
+  transform: translateX(-50%);
+}
+
+.classic-portal:hover .left-door {
+  transform: translateX(-18%);
+  box-shadow: 0 0 2rem rgba(244, 189, 104, 0.16);
+}
+
+.classic-portal:hover .right-door {
+  transform: translateX(18%);
+  box-shadow: 0 0 2rem rgba(244, 189, 104, 0.16);
+}
+
+/* Rainy city portal */
+
+.city-preview {
+  background: linear-gradient(
+    #172744,
+    #273a55 65%,
+    #1b2139
+  );
+}
+
+.city-building {
+  position: absolute;
+  bottom: 0;
+  border: 1px solid var(--primary);
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 0.8rem,
+      rgba(244, 189, 104, 0.75) 0.85rem 1rem,
+      transparent 1.05rem 1.7rem
+    ),
+    #18233d;
+
+  box-shadow: 0 0 1rem rgba(101, 230, 243, 0.2);
+
+  transition:
+    transform 400ms ease,
+    filter 400ms ease;
+}
+
+.building-one {
+  left: 8%;
+  width: 25%;
+  height: 55%;
+}
+
+.building-two {
+  left: 37%;
+  width: 28%;
+  height: 82%;
+}
+
+.building-three {
+  right: 7%;
+  width: 24%;
+  height: 65%;
+}
+
+.rain-glass {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rain-glass::before,
+.rain-glass::after {
+  position: absolute;
+  top: -4rem;
+  left: 5%;
+  width: 0.12rem;
+  height: 1.3rem;
+  border-radius: 999rem;
+  background: rgba(205, 235, 248, 0.65);
+  box-shadow:
+    2.5rem 2rem rgba(205, 235, 248, 0.5),
+    5rem 5rem rgba(205, 235, 248, 0.7),
+    7.5rem 1rem rgba(205, 235, 248, 0.45),
+    10rem 7rem rgba(205, 235, 248, 0.65),
+    12.5rem 3rem rgba(205, 235, 248, 0.4),
+    15rem 6rem rgba(205, 235, 248, 0.7),
+    17.5rem 1.5rem rgba(205, 235, 248, 0.5),
+    20rem 5rem rgba(205, 235, 248, 0.65),
+    22.5rem 2rem rgba(205, 235, 248, 0.45),
+    25rem 7rem rgba(205, 235, 248, 0.7),
+    27.5rem 3.5rem rgba(205, 235, 248, 0.55),
+    30rem 6rem rgba(205, 235, 248, 0.65);
+  content: "";
+  transform: rotate(10deg);
+  animation: rain-drops 1.3s linear infinite;
+}
+
+.rain-glass::after {
+  left: 1%;
+  opacity: 0.45;
+  animation-delay: -0.65s;
+}
+
+.city-portal:hover .building-one {
+  transform: translateY(-0.4rem);
+}
+
+.city-portal:hover .building-two {
+  transform: translateY(-0.8rem);
+}
+
+.city-portal:hover .building-three {
+  transform: translateY(-0.55rem);
+}
+
+.city-portal:hover .city-building {
+  filter: brightness(1.35);
+}
+
+@keyframes rain-drops {
+  from {
+    transform: translateY(-4rem) rotate(10deg);
+  }
+
+  to {
+    transform: translate(-0.6rem, 14rem) rotate(10deg);
+  }
+}
+
+/* Tablet and mobile */
+
+@media (max-width: 48rem) {
+  .landing-page {
+    justify-content: flex-start;
+  }
+
+  .portal-options {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-option {
+    grid-template-rows: 12rem auto;
+  }
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-option,
+  .elevator-door,
+  .city-building {
+    transition: none;
+  }
+
+  .rain-glass::before,
+  .rain-glass::after {
+    animation: none;
+  }
+}
