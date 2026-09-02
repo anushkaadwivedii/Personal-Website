@@ -1,0 +1,18 @@
+.interactive-city-page {
+    width: 100%;
+    min-height: 100svh;
+    overflow: hidden;
+    background: #080c1d;
+  }
+  
+  .interactive-city-canvas {
+    width: 100%;
+    height: 100svh;
+    min-height: 38rem;
+  }
+  
+  .interactive-city-canvas canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
