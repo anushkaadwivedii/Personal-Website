@@ -314,7 +314,7 @@ function ClassicPortfolio() {
               href="#beyond-work"
               onClick={(event) => scrollToSection(event, 'beyond-work')}
             >
-              Beyond work
+              Hobbies
             </a>
           </div>
         </nav>
@@ -571,7 +571,7 @@ function ClassicPortfolio() {
           <div className="section-content">
             <div className="section-heading">
               <div>
-                <p className="section-label">04 · Beyond work</p>
+                <p className="section-label">04 · Hobbies</p>
                 <h2>The rest of me.</h2>
               </div>
             </div>

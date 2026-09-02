@@ -1,4 +1,5 @@
 .interactive-city-page {
+    position: relative;
     width: 100%;
     min-height: 100svh;
     overflow: hidden;
@@ -15,4 +16,289 @@
     display: block;
     width: 100%;
     height: 100%;
+  }
+
+  .interactive-city-hud {
+    position: fixed;
+    z-index: 2;
+    right: 1rem;
+    bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    border: 1px solid rgba(101, 230, 243, 0.2);
+    border-radius: 0.8rem;
+    padding: 0.75rem 0.9rem;
+    color: #fff5e7;
+    background: rgba(8, 12, 29, 0.74);
+    backdrop-filter: blur(0.8rem);
+    pointer-events: none;
+  }
+
+  .interactive-city-area {
+    position: fixed;
+    z-index: 3;
+    top: 1rem;
+    left: 50%;
+    display: flex;
+    min-width: 12rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.16rem;
+    border: 1px solid rgba(101, 230, 243, 0.3);
+    border-radius: 999rem;
+    padding: 0.55rem 1.15rem 0.6rem;
+    color: #fff5e7;
+    background:
+      linear-gradient(135deg, rgba(101, 230, 243, 0.08), transparent 55%),
+      rgba(8, 12, 29, 0.7);
+    box-shadow:
+      0 0.8rem 2.2rem rgba(0, 0, 0, 0.24),
+      0 0 1.5rem rgba(101, 230, 243, 0.08);
+    backdrop-filter: blur(1rem);
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .interactive-city-area span {
+    color: #8fa0b8;
+    font-size: 0.52rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .interactive-city-area strong {
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+  }
+
+  .interactive-city-hud strong {
+    color: #65e6f3;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .interactive-city-hud span {
+    color: #abb7ca;
+    font-size: 0.72rem;
+  }
+
+  .interactive-city-hud small {
+    color: #77869e;
+    font-size: 0.62rem;
+  }
+
+  .city-direction-sign {
+    width: max-content;
+    min-width: 7.8rem;
+    overflow: hidden;
+    border: 1px solid rgba(101, 230, 243, 0.38);
+    border-radius: 0.45rem;
+    color: #fff5e7;
+    background: rgba(10, 18, 35, 0.94);
+    box-shadow:
+      0 0.65rem 1.8rem rgba(0, 0, 0, 0.3),
+      0 0 1.2rem rgba(101, 230, 243, 0.08);
+    pointer-events: none;
+  }
+
+  .city-direction-sign > span {
+    display: block;
+    padding: 0.38rem 0.55rem;
+    color: #65e6f3;
+    background: rgba(101, 230, 243, 0.08);
+    font-size: 0.5rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .city-direction-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-top: 1px solid rgba(119, 145, 183, 0.18);
+    padding: 0.34rem 0.5rem;
+  }
+
+  .city-direction-row b {
+    width: 1rem;
+    color: #ff70a5;
+    font-size: 0.75rem;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .city-direction-row strong {
+    font-size: 0.58rem;
+    letter-spacing: 0.025em;
+  }
+
+  .interactive-city-prompt {
+    position: fixed;
+    z-index: 3;
+    left: 50%;
+    bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    border: 1px solid rgba(101, 230, 243, 0.32);
+    border-radius: 999rem;
+    padding: 0.55rem 0.85rem 0.55rem 0.6rem;
+    color: #c3ccda;
+    background: rgba(8, 12, 29, 0.88);
+    box-shadow: 0 0 2rem rgba(101, 230, 243, 0.1);
+    backdrop-filter: blur(0.8rem);
+    transform: translateX(-50%);
+  }
+
+  .interactive-city-prompt kbd {
+    display: grid;
+    width: 1.8rem;
+    height: 1.8rem;
+    place-items: center;
+    border: 1px solid rgba(101, 230, 243, 0.5);
+    border-radius: 50%;
+    color: #07101a;
+    background: #65e6f3;
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .interactive-city-prompt span {
+    font-size: 0.76rem;
+  }
+
+  .interactive-city-prompt strong {
+    color: #fff5e7;
+  }
+
+  .interactive-city-location-panel {
+    position: fixed;
+    z-index: 4;
+    top: 1rem;
+    left: 1rem;
+    width: min(27rem, calc(100% - 2rem));
+    border: 1px solid rgba(101, 230, 243, 0.25);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    color: #fff5e7;
+    background:
+      radial-gradient(circle at 100% 0, rgba(101, 230, 243, 0.12), transparent 12rem),
+      rgba(8, 12, 29, 0.92);
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(1rem);
+  }
+
+  .interactive-city-location-panel p {
+    margin: 0 0 0.65rem;
+    color: #65e6f3;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .interactive-city-location-panel h1 {
+    margin: 0;
+    font-size: clamp(1.65rem, 5vw, 2.3rem);
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .interactive-city-location-panel > span {
+    display: block;
+    margin-top: 0.9rem;
+    color: #aeb9cb;
+    font-size: 0.84rem;
+    line-height: 1.65;
+  }
+
+  .city-location-metric {
+    display: flex;
+    align-items: end;
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+
+  .city-location-metric strong {
+    color: #65e6f3;
+    font-size: 1.75rem;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+  }
+
+  .city-location-metric span {
+    max-width: 9rem;
+    color: #909db1;
+    font-size: 0.64rem;
+    line-height: 1.35;
+  }
+
+  .city-location-skills,
+  .city-location-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 1rem;
+  }
+
+  .city-location-skills span {
+    border: 1px solid rgba(119, 145, 183, 0.35);
+    border-radius: 999rem;
+    padding: 0.3rem 0.5rem;
+    color: #c7d0dd;
+    font-size: 0.61rem;
+  }
+
+  .city-location-links a {
+    border: 1px solid rgba(101, 230, 243, 0.3);
+    border-radius: 0.55rem;
+    padding: 0.48rem 0.62rem;
+    color: #65e6f3;
+    font-size: 0.64rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .city-location-links a:hover {
+    border-color: #65e6f3;
+    background: rgba(101, 230, 243, 0.08);
+  }
+
+  .interactive-city-location-panel button {
+    margin-top: 1.1rem;
+    border: 1px solid rgba(101, 230, 243, 0.35);
+    border-radius: 0.65rem;
+    padding: 0.65rem 0.8rem;
+    color: #65e6f3;
+    background: rgba(101, 230, 243, 0.06);
+    font: inherit;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .interactive-city-location-panel button:hover {
+    border-color: #65e6f3;
+    background: rgba(101, 230, 243, 0.12);
+  }
+
+  @media (max-width: 36rem) {
+    .interactive-city-hud {
+      right: 50%;
+      bottom: 0.75rem;
+      width: max-content;
+      max-width: calc(100% - 1.5rem);
+      transform: translateX(50%);
+      text-align: center;
+    }
+
+    .interactive-city-prompt {
+      bottom: 5rem;
+    }
   }
