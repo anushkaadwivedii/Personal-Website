@@ -1878,10 +1878,8 @@ type CarProps = {
 }
 
 type MobileControlState = {
-  forward: boolean
-  backward: boolean
-  left: boolean
-  right: boolean
+  throttle: number
+  steering: number
 }
 
 function getCurrentArea(x: number, z: number) {
@@ -2009,31 +2007,31 @@ function Car({
       return
     }
 
-    const movingLeft =
-      pressedKeys.current.has('arrowleft') ||
-      pressedKeys.current.has('a') ||
-      mobileControls.current.left
+    const keyboardThrottle =
+      Number(
+        pressedKeys.current.has('arrowup') ||
+          pressedKeys.current.has('w'),
+      ) -
+      Number(
+        pressedKeys.current.has('arrowdown') ||
+          pressedKeys.current.has('s'),
+      )
 
-    const movingRight =
-      pressedKeys.current.has('arrowright') ||
-      pressedKeys.current.has('d') ||
-      mobileControls.current.right
-
-    const movingForward =
-      pressedKeys.current.has('arrowup') ||
-      pressedKeys.current.has('w') ||
-      mobileControls.current.forward
-
-    const movingBackward =
-      pressedKeys.current.has('arrowdown') ||
-      pressedKeys.current.has('s') ||
-      mobileControls.current.backward
+    const keyboardSteering =
+      Number(
+        pressedKeys.current.has('arrowleft') ||
+          pressedKeys.current.has('a'),
+      ) -
+      Number(
+        pressedKeys.current.has('arrowright') ||
+          pressedKeys.current.has('d'),
+      )
 
     const throttleDirection =
-      Number(movingForward) - Number(movingBackward)
+      keyboardThrottle || mobileControls.current.throttle
 
     const steeringDirection =
-      Number(movingLeft) - Number(movingRight)
+      keyboardSteering || mobileControls.current.steering
 
     const maxForwardSpeed = 12
     const maxReverseSpeed = 3.2
@@ -2047,10 +2045,10 @@ function Car({
     let speedChange = rollingResistance
 
     if (throttleDirection > 0) {
-      targetSpeed = maxForwardSpeed
+      targetSpeed = maxForwardSpeed * throttleDirection
       speedChange = currentSpeed.current < 0 ? braking : acceleration
     } else if (throttleDirection < 0) {
-      targetSpeed = -maxReverseSpeed
+      targetSpeed = maxReverseSpeed * throttleDirection
       speedChange =
         currentSpeed.current > 0 ? braking : reverseAcceleration
     }
@@ -2464,10 +2462,8 @@ function InteractiveCity() {
   const musicRef = useRef<HTMLAudioElement>(null)
   const hasStartedMusicRef = useRef(false)
   const mobileControls = useRef<MobileControlState>({
-    forward: false,
-    backward: false,
-    left: false,
-    right: false,
+    throttle: 0,
+    steering: 0,
   })
   const [mobileJoystickPosition, setMobileJoystickPosition] = useState({
     x: 0,
@@ -2477,10 +2473,8 @@ function InteractiveCity() {
     setActiveDestination(null)
   }, [])
   const resetMobileControls = useCallback(() => {
-    mobileControls.current.forward = false
-    mobileControls.current.backward = false
-    mobileControls.current.left = false
-    mobileControls.current.right = false
+    mobileControls.current.throttle = 0
+    mobileControls.current.steering = 0
   }, [])
   const resetMobileJoystick = useCallback(() => {
     resetMobileControls()
@@ -2500,12 +2494,22 @@ function InteractiveCity() {
         -1,
         1,
       )
-      const deadZone = 0.16
+      const deadZone = 0.22
+      const applyDeadZone = (value: number) => {
+        const magnitude = Math.abs(value)
 
-      mobileControls.current.forward = y < -deadZone
-      mobileControls.current.backward = y > deadZone
-      mobileControls.current.left = x < -deadZone
-      mobileControls.current.right = x > deadZone
+        if (magnitude <= deadZone) {
+          return 0
+        }
+
+        return (
+          Math.sign(value) *
+          ((magnitude - deadZone) / (1 - deadZone))
+        )
+      }
+
+      mobileControls.current.throttle = -applyDeadZone(y) * 0.62
+      mobileControls.current.steering = -applyDeadZone(x) * 0.7
       setMobileJoystickPosition({ x, y })
     },
     [],
