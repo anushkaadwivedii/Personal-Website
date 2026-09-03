@@ -2032,6 +2032,9 @@ function Car({
 
     const steeringDirection =
       keyboardSteering || mobileControls.current.steering
+    const mobileAccelerationScale = keyboardThrottle
+      ? 1
+      : MathUtils.lerp(0.32, 0.62, Math.abs(throttleDirection))
 
     const maxForwardSpeed = 12
     const maxReverseSpeed = 3.2
@@ -2046,11 +2049,16 @@ function Car({
 
     if (throttleDirection > 0) {
       targetSpeed = maxForwardSpeed * throttleDirection
-      speedChange = currentSpeed.current < 0 ? braking : acceleration
+      speedChange =
+        currentSpeed.current < 0
+          ? braking
+          : acceleration * mobileAccelerationScale
     } else if (throttleDirection < 0) {
       targetSpeed = maxReverseSpeed * throttleDirection
       speedChange =
-        currentSpeed.current > 0 ? braking : reverseAcceleration
+        currentSpeed.current > 0
+          ? braking
+          : reverseAcceleration * mobileAccelerationScale
     }
 
     const speedDifference = targetSpeed - currentSpeed.current
@@ -2465,6 +2473,7 @@ function InteractiveCity() {
     throttle: 0,
     steering: 0,
   })
+  const mobileJoystickOrigin = useRef<{ x: number; y: number } | null>(null)
   const [mobileJoystickPosition, setMobileJoystickPosition] = useState({
     x: 0,
     y: 0,
@@ -2478,23 +2487,30 @@ function InteractiveCity() {
   }, [])
   const resetMobileJoystick = useCallback(() => {
     resetMobileControls()
+    mobileJoystickOrigin.current = null
     setMobileJoystickPosition({ x: 0, y: 0 })
   }, [resetMobileControls])
   const updateMobileJoystick = useCallback(
     (event: ReactPointerEvent<HTMLButtonElement>) => {
+      const origin = mobileJoystickOrigin.current
+
+      if (!origin) {
+        return
+      }
+
       const bounds = event.currentTarget.getBoundingClientRect()
-      const radius = Math.min(bounds.width, bounds.height) / 2
+      const dragDistance = Math.min(bounds.width, bounds.height) * 0.55
       const x = MathUtils.clamp(
-        (event.clientX - (bounds.left + bounds.width / 2)) / radius,
+        (event.clientX - origin.x) / dragDistance,
         -1,
         1,
       )
       const y = MathUtils.clamp(
-        (event.clientY - (bounds.top + bounds.height / 2)) / radius,
+        (event.clientY - origin.y) / dragDistance,
         -1,
         1,
       )
-      const deadZone = 0.22
+      const deadZone = 0.18
       const applyDeadZone = (value: number) => {
         const magnitude = Math.abs(value)
 
@@ -2508,8 +2524,8 @@ function InteractiveCity() {
         )
       }
 
-      mobileControls.current.throttle = -applyDeadZone(y) * 0.62
-      mobileControls.current.steering = -applyDeadZone(x) * 0.7
+      mobileControls.current.throttle = -applyDeadZone(y) * 0.45
+      mobileControls.current.steering = -applyDeadZone(x) * 0.55
       setMobileJoystickPosition({ x, y })
     },
     [],
@@ -2518,9 +2534,14 @@ function InteractiveCity() {
     (event: ReactPointerEvent<HTMLButtonElement>) => {
       event.preventDefault()
       event.currentTarget.setPointerCapture(event.pointerId)
-      updateMobileJoystick(event)
+      mobileJoystickOrigin.current = {
+        x: event.clientX,
+        y: event.clientY,
+      }
+      resetMobileControls()
+      setMobileJoystickPosition({ x: 0, y: 0 })
     },
-    [updateMobileJoystick],
+    [resetMobileControls],
   )
   const moveMobileJoystick = useCallback(
     (event: ReactPointerEvent<HTMLButtonElement>) => {
