@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Html, useGLTF } from '@react-three/drei'
+import { Html, Instance, Instances, useGLTF } from '@react-three/drei'
 import {
   CuboidCollider,
   Physics,
@@ -23,6 +23,9 @@ type BuildingProps = {
   isOcclusionRoot?: boolean
 }
 
+const BUILDING_HEIGHT_MULTIPLIER = 1.28
+const ROAD_COORDINATES = [-42, -21, 0, 21, 42]
+
 type RoadProps = {
   position: [number, number]
   length: number
@@ -31,33 +34,99 @@ type RoadProps = {
 
 function Road({ position, length, orientation }: RoadProps) {
   const roadSize: [number, number] =
-    orientation === 'horizontal' ? [length, 6] : [6, length]
-
-  const lineSize: [number, number] =
-    orientation === 'horizontal' ? [length, 0.08] : [0.08, length]
+    orientation === 'horizontal' ? [length, 6.5] : [6.5, length]
+  const dashCount = Math.floor(length / 5)
+  const dashOffsets = Array.from(
+    { length: dashCount },
+    (_, index) => -length / 2 + 2.5 + index * 5,
+  ).filter((offset) =>
+    ROAD_COORDINATES.every(
+      (intersectionCoordinate) =>
+        Math.abs(offset - intersectionCoordinate) > 4.4,
+    ),
+  )
+  const dashSize: [number, number, number] =
+    orientation === 'horizontal'
+      ? [2.25, 0.025, 0.1]
+      : [0.1, 0.025, 2.25]
 
   return (
     <group>
       <mesh
-        position={[position[0], 0.025, position[1]]}
+        position={[
+          position[0],
+          orientation === 'horizontal' ? 0.03 : 0.024,
+          position[1],
+        ]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <planeGeometry args={roadSize} />
         <meshStandardMaterial
-          color="#080b15"
-          roughness={0.42}
-          metalness={0.18}
+          color="#070a11"
+          roughness={0.72}
+          metalness={0.06}
         />
       </mesh>
 
-      <mesh
-        position={[position[0], 0.035, position[1]]}
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <planeGeometry args={lineSize} />
-        <meshBasicMaterial color="#ba9b58" transparent opacity={0.55} />
-      </mesh>
+      <Instances limit={dashOffsets.length}>
+        <boxGeometry args={dashSize} />
+        <meshBasicMaterial color="#d4b768" transparent opacity={0.68} />
+
+        {dashOffsets.map((offset) => (
+          <Instance
+            position={
+              orientation === 'horizontal'
+                ? [position[0] + offset, 0.052, position[1]]
+                : [position[0], 0.052, position[1] + offset]
+            }
+            key={offset}
+          />
+        ))}
+      </Instances>
     </group>
+  )
+}
+
+function CityBlock({ position }: { position: [number, number] }) {
+  return (
+    <mesh position={[position[0], 0.035, position[1]]}>
+      <boxGeometry args={[14.5, 0.07, 14.5]} />
+      <meshStandardMaterial color="#182033" roughness={0.82} metalness={0.04} />
+    </mesh>
+  )
+}
+
+function Crosswalk({
+  position,
+  orientation,
+}: {
+  position: [number, number]
+  orientation: 'horizontal' | 'vertical'
+}) {
+  const stripeOffsets = [-1.2, -0.6, 0, 0.6, 1.2]
+
+  return (
+    <Instances limit={stripeOffsets.length}>
+      <boxGeometry
+        args={
+          orientation === 'horizontal'
+            ? [0.28, 0.025, 4.6]
+            : [4.6, 0.025, 0.28]
+        }
+      />
+      <meshBasicMaterial color="#d8dfdf" transparent opacity={0.46} />
+
+      {stripeOffsets.map((offset) => (
+        <Instance
+          position={
+            orientation === 'horizontal'
+              ? [position[0] + offset, 0.067, position[1]]
+              : [position[0], 0.067, position[1] + offset]
+          }
+          key={offset}
+        />
+      ))}
+    </Instances>
   )
 }
 
@@ -67,11 +136,21 @@ function Building({
   color = '#17233f',
   isOcclusionRoot = true,
 }: BuildingProps) {
+  const elevatedPosition: [number, number, number] = [
+    position[0],
+    position[1] * BUILDING_HEIGHT_MULTIPLIER,
+    position[2],
+  ]
+  const tallerScale: [number, number, number] = [
+    scale[0],
+    scale[1] * BUILDING_HEIGHT_MULTIPLIER,
+    scale[2],
+  ]
   const building = (
     <RigidBody type="fixed" colliders="cuboid">
       <mesh
-        position={position}
-        scale={scale}
+        position={elevatedPosition}
+        scale={tallerScale}
         userData={{ cameraOccluder: true }}
       >
         <boxGeometry />
@@ -95,40 +174,18 @@ function Building({
   )
 }
 
-function FacadeWindow({
-  position,
-  color,
-  width = 1.05,
-  height = 1.3,
-}: {
-  position: [number, number, number]
-  color: string
-  width?: number
-  height?: number
-}) {
-  return (
-    <mesh position={position}>
-      <boxGeometry args={[width, height, 0.08]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={0.75}
-        roughness={0.25}
-      />
-    </mesh>
-  )
-}
-
 function LitEntrance({
   position,
   color,
+  rotationY = 0,
 }: {
   position: [number, number, number]
   color: string
+  rotationY?: number
 }) {
   return (
-    <group>
-      <mesh position={position}>
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <mesh>
         <boxGeometry args={[1.45, 2.45, 0.12]} />
         <meshStandardMaterial
           color="#10182d"
@@ -137,7 +194,7 @@ function LitEntrance({
           roughness={0.35}
         />
       </mesh>
-      <mesh position={[position[0], position[1], position[2] + 0.08]}>
+      <mesh position={[0, 0, 0.08]}>
         <boxGeometry args={[1.05, 2.05, 0.08]} />
         <meshStandardMaterial
           color={color}
@@ -147,11 +204,56 @@ function LitEntrance({
         />
       </mesh>
       <pointLight
-        position={[position[0], position[1] + 0.2, position[2] + 1.1]}
+        position={[0, 0.2, 1.1]}
         color={color}
         intensity={7}
         distance={5}
       />
+    </group>
+  )
+}
+
+function WindowGrid({
+  position,
+  rotationY,
+  width,
+  rows,
+  color,
+}: {
+  position: [number, number, number]
+  rotationY: number
+  width: number
+  rows: number[]
+  color: string
+}) {
+  const columnCount = Math.max(2, Math.min(5, Math.floor(width / 1.65)))
+  const usableWidth = Math.max(width - 1.4, 1.8)
+  const columnSpacing = usableWidth / columnCount
+  const paneWidth = Math.min(1.15, columnSpacing * 0.66)
+  const columns = Array.from(
+    { length: columnCount },
+    (_, index) =>
+      -usableWidth / 2 + columnSpacing / 2 + index * columnSpacing,
+  )
+
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <Instances limit={columns.length * rows.length}>
+        <boxGeometry args={[paneWidth, 0.92, 0.08]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.52}
+          roughness={0.28}
+          metalness={0.12}
+        />
+
+        {rows.flatMap((row) =>
+          columns.map((column) => (
+            <Instance position={[column, row, 0]} key={`${row}-${column}`} />
+          )),
+        )}
+      </Instances>
     </group>
   )
 }
@@ -164,39 +266,442 @@ function ArrivalMarker({
   color: string
 }) {
   return (
-    <mesh position={position} rotation={[-Math.PI / 2, 0, 0]}>
-      <ringGeometry args={[0.65, 1, 40]} />
-      <meshBasicMaterial color={color} transparent opacity={0.7} />
+    <group position={position}>
+      <mesh position={[0, 0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.82, 0.055, 14, 64]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={1.35}
+          roughness={0.3}
+          metalness={0.18}
+        />
+      </mesh>
+      <pointLight
+        position={[0, 0.28, 0]}
+        color={color}
+        intensity={1.8}
+        distance={2.8}
+        decay={2}
+      />
+    </group>
+  )
+}
+
+type BuildingMotif =
+  | 'none'
+  | 'steps'
+  | 'orbit'
+  | 'people'
+  | 'terminal'
+  | 'lab'
+  | 'ticker'
+  | 'yarn'
+  | 'books'
+  | 'bike'
+  | 'dumbbell'
+  | 'kitchen'
+  | 'gallery'
+  | 'graduation'
+  | 'documents'
+  | 'signal'
+
+type DestinationVisual = {
+  accent: string
+  secondary: string
+  motif: BuildingMotif
+}
+
+type DestinationMark = {
+  symbol: string
+  label: string
+}
+
+const destinationVisuals: Record<string, DestinationVisual> = {
+  'pmt-college': { accent: '#f2b95e', secondary: '#65e6f3', motif: 'steps' },
+  'uw-research': { accent: '#65e6f3', secondary: '#9c87eb', motif: 'orbit' },
+  'peer-mentor': { accent: '#ffbd72', secondary: '#ff70a5', motif: 'people' },
+  resonance: { accent: '#65e6f3', secondary: '#ff70a5', motif: 'none' },
+  codepilot: { accent: '#65e6f3', secondary: '#9c87eb', motif: 'terminal' },
+  'clinical-analytics': { accent: '#72efc3', secondary: '#65e6f3', motif: 'lab' },
+  ledgerpilot: { accent: '#e1ad59', secondary: '#65e6f3', motif: 'none' },
+  'market-data-engine': { accent: '#65e6f3', secondary: '#72efc3', motif: 'ticker' },
+  'cozy-corner-project': { accent: '#ff70a5', secondary: '#e1ad59', motif: 'yarn' },
+  'crochet-shop': { accent: '#ff9dbd', secondary: '#bba1ff', motif: 'yarn' },
+  library: { accent: '#f3c969', secondary: '#ff9dbd', motif: 'books' },
+  'cycle-hub': { accent: '#65e6f3', secondary: '#e1ad59', motif: 'bike' },
+  'music-room': { accent: '#ff70a5', secondary: '#65e6f3', motif: 'ticker' },
+  gym: { accent: '#ff9e64', secondary: '#65e6f3', motif: 'dumbbell' },
+  'night-kitchen': { accent: '#ffad7d', secondary: '#f3c969', motif: 'kitchen' },
+  'about-gallery': { accent: '#bba1ff', secondary: '#65e6f3', motif: 'gallery' },
+  'graduation-park': { accent: '#c84a63', secondary: '#f3c969', motif: 'graduation' },
+  'resume-station': { accent: '#65e6f3', secondary: '#bba1ff', motif: 'documents' },
+  'contact-kiosk': { accent: '#65e6f3', secondary: '#ff70a5', motif: 'signal' },
+}
+
+const destinationMarks: Record<string, DestinationMark> = {
+  'pmt-college': { symbol: '✓', label: 'PMT' },
+  'uw-research': { symbol: '◌', label: 'UW Lab' },
+  'peer-mentor': { symbol: '∞', label: 'Mentor' },
+  resonance: { symbol: '≈', label: 'Resonance' },
+  codepilot: { symbol: '>_', label: 'CodePilot' },
+  'clinical-analytics': { symbol: '+', label: 'Clinical' },
+  ledgerpilot: { symbol: '▦', label: 'LedgerPilot' },
+  'market-data-engine': { symbol: '↗', label: 'Market Data' },
+  'cozy-corner-project': { symbol: '◇', label: 'Cozy Corner' },
+  'crochet-shop': { symbol: '◎', label: 'Crochet' },
+  library: { symbol: '▤', label: 'Library' },
+  'cycle-hub': { symbol: '○○', label: 'Cycle Hub' },
+  'music-room': { symbol: '♫', label: 'Music Room' },
+  gym: { symbol: 'H', label: 'Gym' },
+  'night-kitchen': { symbol: '⌁', label: 'Night Kitchen' },
+  'about-gallery': { symbol: 'AD', label: 'About' },
+  'graduation-park': { symbol: 'W', label: 'Graduation' },
+  'resume-station': { symbol: 'CV', label: 'Résumé' },
+  'contact-kiosk': { symbol: '@', label: 'Contact' },
+}
+
+function BuildingIdentitySign({
+  destination,
+  position,
+  color,
+}: {
+  destination: CityDestination
+  position: [number, number, number]
+  color: string
+}) {
+  const mark = destinationMarks[destination.id]
+
+  if (!mark) {
+    return null
+  }
+
+  return (
+    <Html position={position} center distanceFactor={11} occlude>
+      <div
+        className="city-building-sign"
+        style={{ borderColor: color, color }}
+      >
+        <span aria-hidden="true">{mark.symbol}</span>
+        <strong>{mark.label}</strong>
+      </div>
+    </Html>
+  )
+}
+
+function GlowBox({
+  position,
+  scale,
+  color,
+  rotation = [0, 0, 0],
+}: {
+  position: [number, number, number]
+  scale: [number, number, number]
+  color: string
+  rotation?: [number, number, number]
+}) {
+  return (
+    <mesh position={position} rotation={rotation}>
+      <boxGeometry args={scale} />
+      <meshStandardMaterial
+        color={color}
+        emissive={color}
+        emissiveIntensity={0.85}
+        roughness={0.28}
+      />
     </mesh>
   )
 }
 
+function RoofMotif({
+  motif,
+  position,
+  accent,
+  secondary,
+}: {
+  motif: BuildingMotif
+  position: [number, number, number]
+  accent: string
+  secondary: string
+}) {
+  if (motif === 'none') {
+    return null
+  }
+
+  if (motif === 'steps' || motif === 'documents' || motif === 'books') {
+    return (
+      <group position={position}>
+        {[0, 1, 2].map((level) => (
+          <GlowBox
+            position={[level * 0.18, 0.18 + level * 0.22, 0]}
+            scale={[2.4 - level * 0.35, 0.24, 1.35]}
+            color={level % 2 === 0 ? accent : secondary}
+            rotation={[0, level % 2 === 0 ? 0.08 : -0.08, 0]}
+            key={level}
+          />
+        ))}
+      </group>
+    )
+  }
+
+  if (motif === 'ticker') {
+    const heights = [0.55, 0.9, 0.7, 1.25, 1.55]
+
+    return (
+      <group position={position}>
+        {heights.map((height, index) => (
+          <GlowBox
+            position={[-1.2 + index * 0.6, height / 2, 0]}
+            scale={[0.25, height, 0.4]}
+            color={index % 2 === 0 ? accent : secondary}
+            key={`${height}-${index}`}
+          />
+        ))}
+      </group>
+    )
+  }
+
+  if (motif === 'terminal' || motif === 'gallery') {
+    return (
+      <group position={position}>
+        <GlowBox position={[-1, 0.65, 0]} scale={[0.2, 1.3, 0.35]} color={accent} />
+        <GlowBox position={[0, 0.65, 0]} scale={[0.2, 1.3, 0.35]} color={secondary} />
+        <GlowBox position={[1, 0.65, 0]} scale={[0.2, 1.3, 0.35]} color={accent} />
+        <GlowBox position={[0, 1.35, 0]} scale={[2.25, 0.18, 0.35]} color={secondary} />
+      </group>
+    )
+  }
+
+  if (motif === 'orbit' || motif === 'yarn' || motif === 'lab') {
+    return (
+      <group position={[position[0], position[1] + 0.7, position[2]]}>
+        <mesh>
+          <sphereGeometry args={[0.46, 18, 18]} />
+          <meshStandardMaterial
+            color={accent}
+            emissive={accent}
+            emissiveIntensity={0.75}
+            wireframe={motif === 'yarn'}
+          />
+        </mesh>
+        <mesh rotation={[Math.PI / 2.5, 0, 0]}>
+          <torusGeometry args={[0.82, 0.07, 10, 40]} />
+          <meshStandardMaterial color={secondary} emissive={secondary} emissiveIntensity={1} />
+        </mesh>
+        {motif !== 'yarn' && (
+          <mesh rotation={[0, Math.PI / 2.5, 0]}>
+            <torusGeometry args={[0.82, 0.07, 10, 40]} />
+            <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={1} />
+          </mesh>
+        )}
+      </group>
+    )
+  }
+
+  if (motif === 'people') {
+    return (
+      <group position={position}>
+        {[-0.75, 0, 0.75].map((offset, index) => (
+          <mesh position={[offset, index === 1 ? 0.82 : 0.58, 0]} key={offset}>
+            <sphereGeometry args={[index === 1 ? 0.38 : 0.3, 16, 16]} />
+            <meshStandardMaterial
+              color={index === 1 ? secondary : accent}
+              emissive={index === 1 ? secondary : accent}
+              emissiveIntensity={0.8}
+            />
+          </mesh>
+        ))}
+      </group>
+    )
+  }
+
+  if (motif === 'bike') {
+    return (
+      <group position={[position[0], position[1] + 0.7, position[2]]}>
+        {[-0.75, 0.75].map((offset) => (
+          <mesh position={[offset, 0, 0]} key={offset}>
+            <torusGeometry args={[0.46, 0.09, 12, 36]} />
+            <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.9} />
+          </mesh>
+        ))}
+        <GlowBox position={[0, 0.05, 0]} scale={[1.15, 0.1, 0.12]} color={secondary} rotation={[0, 0, 0.55]} />
+      </group>
+    )
+  }
+
+  if (motif === 'dumbbell') {
+    return (
+      <group position={[position[0], position[1] + 0.55, position[2]]} rotation={[0, 0, Math.PI / 2]}>
+        <mesh>
+          <cylinderGeometry args={[0.1, 0.1, 1.8, 12]} />
+          <meshStandardMaterial color={secondary} emissive={secondary} emissiveIntensity={0.8} />
+        </mesh>
+        {[-0.85, 0.85].map((offset) => (
+          <GlowBox position={[0, offset, 0]} scale={[0.45, 0.28, 0.45]} color={accent} key={offset} />
+        ))}
+      </group>
+    )
+  }
+
+  if (motif === 'kitchen') {
+    return (
+      <group position={position}>
+        <GlowBox position={[-0.55, 0.6, 0]} scale={[0.55, 1.2, 0.65]} color={accent} />
+        <GlowBox position={[0.55, 0.42, 0]} scale={[0.55, 0.84, 0.65]} color={secondary} />
+        <GlowBox position={[-0.55, 1.27, 0]} scale={[0.82, 0.14, 0.82]} color={secondary} />
+      </group>
+    )
+  }
+
+  if (motif === 'graduation') {
+    return (
+      <group position={[position[0], position[1] + 0.65, position[2]]}>
+        <mesh rotation={[0, 0, Math.PI]}>
+          <coneGeometry args={[0.85, 1.2, 4]} />
+          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.75} />
+        </mesh>
+        <GlowBox position={[0, 0.65, 0]} scale={[1.5, 0.12, 1.5]} color={secondary} rotation={[0, 0.2, 0]} />
+      </group>
+    )
+  }
+
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.85, 0]}>
+        <cylinderGeometry args={[0.08, 0.1, 1.7, 12]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.8} />
+      </mesh>
+      {[0.45, 0.75].map((radius, index) => (
+        <mesh position={[0, 1.55, 0]} rotation={[Math.PI / 2, 0, 0]} key={radius}>
+          <torusGeometry args={[radius, 0.05, 8, 32]} />
+          <meshBasicMaterial color={index === 0 ? accent : secondary} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function BuildingShellDetails({ destination }: { destination: CityDestination }) {
+  const visual = destinationVisuals[destination.id]
+
+  if (!visual) {
+    return null
+  }
+
+  const [buildingX, originalBuildingY, buildingZ] = destination.buildingPosition
+  const [buildingWidth, originalBuildingHeight, buildingDepth] = destination.buildingScale
+  const buildingY = originalBuildingY * BUILDING_HEIGHT_MULTIPLIER
+  const buildingHeight = originalBuildingHeight * BUILDING_HEIGHT_MULTIPLIER
+  const [entranceX, , entranceZ] = destination.entrancePosition
+  const entranceDeltaX = entranceX - buildingX
+  const entranceDeltaZ = entranceZ - buildingZ
+  const entranceIsOnSide = Math.abs(entranceDeltaX) > Math.abs(entranceDeltaZ)
+  const entranceDirection = entranceIsOnSide
+    ? Math.sign(entranceDeltaX)
+    : Math.sign(entranceDeltaZ)
+  const entranceRotation = entranceIsOnSide
+    ? entranceDirection > 0
+      ? Math.PI / 2
+      : -Math.PI / 2
+    : entranceDirection > 0
+      ? 0
+      : Math.PI
+  const entrancePosition: [number, number, number] = entranceIsOnSide
+    ? [
+        buildingX + entranceDirection * (buildingWidth / 2 + 0.08),
+        1.23,
+        buildingZ,
+      ]
+    : [
+        buildingX,
+        1.23,
+        buildingZ + entranceDirection * (buildingDepth / 2 + 0.08),
+      ]
+  const rowCount = Math.max(1, Math.min(4, Math.floor(buildingHeight / 2.2)))
+  const windowRows = Array.from({ length: rowCount }, (_, index) => {
+    if (rowCount === 1) {
+      return Math.min(2.35, buildingHeight * 0.62)
+    }
+
+    return 2.35 + index * ((buildingHeight - 3.2) / (rowCount - 1))
+  })
+
+  return (
+    <group>
+      <WindowGrid
+        position={[buildingX, 0, buildingZ + buildingDepth / 2 + 0.06]}
+        rotationY={0}
+        width={buildingWidth}
+        rows={windowRows}
+        color={visual.accent}
+      />
+      <WindowGrid
+        position={[buildingX, 0, buildingZ - buildingDepth / 2 - 0.06]}
+        rotationY={Math.PI}
+        width={buildingWidth}
+        rows={windowRows}
+        color={visual.accent}
+      />
+      <WindowGrid
+        position={[buildingX + buildingWidth / 2 + 0.06, 0, buildingZ]}
+        rotationY={Math.PI / 2}
+        width={buildingDepth}
+        rows={windowRows}
+        color={visual.accent}
+      />
+      <WindowGrid
+        position={[buildingX - buildingWidth / 2 - 0.06, 0, buildingZ]}
+        rotationY={-Math.PI / 2}
+        width={buildingDepth}
+        rows={windowRows}
+        color={visual.accent}
+      />
+
+      <mesh
+        position={[buildingX, Math.max(1.8, buildingHeight * 0.68), buildingZ]}
+        scale={[buildingWidth + 0.1, 0.09, buildingDepth + 0.1]}
+      >
+        <boxGeometry />
+        <meshBasicMaterial color={visual.secondary} />
+      </mesh>
+
+      <LitEntrance
+        position={entrancePosition}
+        color={visual.accent}
+        rotationY={entranceRotation}
+      />
+
+      <BuildingIdentitySign
+        destination={destination}
+        position={[entrancePosition[0], 3.05, entrancePosition[2]]}
+        color={visual.accent}
+      />
+
+      <ArrivalMarker
+        position={[entranceX, 0.07, entranceZ]}
+        color={visual.accent}
+      />
+
+      <RoofMotif
+        motif={visual.motif}
+        position={[buildingX, buildingY + buildingHeight / 2 + 0.08, buildingZ]}
+        accent={visual.accent}
+        secondary={visual.secondary}
+      />
+    </group>
+  )
+}
+
 function ResonanceDetails({ destination }: { destination: CityDestination }) {
-  const [buildingX, buildingY, buildingZ] = destination.buildingPosition
-  const [, buildingHeight, buildingDepth] = destination.buildingScale
-  const facadeZ = buildingZ + buildingDepth / 2 + 0.06
+  const [buildingX, originalBuildingY, buildingZ] = destination.buildingPosition
+  const [, originalBuildingHeight] = destination.buildingScale
+  const buildingY = originalBuildingY * BUILDING_HEIGHT_MULTIPLIER
+  const buildingHeight = originalBuildingHeight * BUILDING_HEIGHT_MULTIPLIER
   const roofY = buildingY + buildingHeight / 2
-  const windowColumns = [-1.75, 0, 1.75]
-  const windowRows = [2.35, 4.75, 7.15]
   const equalizerHeights = [0.65, 1.15, 0.85, 1.4, 0.75]
 
   return (
     <group>
-      {windowRows.flatMap((row, rowIndex) =>
-        windowColumns.map((column, columnIndex) => (
-          <FacadeWindow
-            position={[buildingX + column, row, facadeZ]}
-            color={(rowIndex + columnIndex) % 2 === 0 ? '#65e6f3' : '#ff70a5'}
-            key={`${row}-${column}`}
-          />
-        )),
-      )}
-
-      <LitEntrance
-        position={[buildingX, 1.23, facadeZ + 0.02]}
-        color="#65e6f3"
-      />
-
       {equalizerHeights.map((height, index) => (
         <mesh
           position={[
@@ -214,52 +719,26 @@ function ResonanceDetails({ destination }: { destination: CityDestination }) {
           />
         </mesh>
       ))}
-
-      <ArrivalMarker
-        position={[
-          destination.entrancePosition[0],
-          0.07,
-          destination.entrancePosition[2],
-        ]}
-        color="#65e6f3"
-      />
     </group>
   )
 }
 
 function LedgerPilotDetails({ destination }: { destination: CityDestination }) {
-  const [buildingX, buildingY, buildingZ] = destination.buildingPosition
-  const [, buildingHeight, buildingDepth] = destination.buildingScale
+  const [buildingX, originalBuildingY, buildingZ] = destination.buildingPosition
+  const [, originalBuildingHeight, buildingDepth] = destination.buildingScale
+  const buildingY = originalBuildingY * BUILDING_HEIGHT_MULTIPLIER
+  const buildingHeight = originalBuildingHeight * BUILDING_HEIGHT_MULTIPLIER
   const facadeZ = buildingZ + buildingDepth / 2 + 0.06
   const roofY = buildingY + buildingHeight / 2
-  const windowColumns = [-1.7, 0, 1.7]
-  const windowRows = [2.25, 4.6]
 
   return (
     <group>
-      {windowRows.flatMap((row) =>
-        windowColumns.map((column) => (
-          <FacadeWindow
-            position={[buildingX + column, row, facadeZ]}
-            color="#e1ad59"
-            width={1.08}
-            height={1.15}
-            key={`${row}-${column}`}
-          />
-        )),
-      )}
-
       {[1.55, 3.4, 5.75].map((row) => (
         <mesh position={[buildingX, row, facadeZ + 0.07]} key={row}>
           <boxGeometry args={[5.1, 0.07, 0.06]} />
           <meshBasicMaterial color="#65e6f3" />
         </mesh>
       ))}
-
-      <LitEntrance
-        position={[buildingX, 1.23, facadeZ + 0.12]}
-        color="#e1ad59"
-      />
 
       <mesh position={[buildingX, roofY + 0.85, buildingZ]}>
         <torusGeometry args={[0.72, 0.12, 14, 48]} />
@@ -270,15 +749,6 @@ function LedgerPilotDetails({ destination }: { destination: CityDestination }) {
           metalness={0.45}
         />
       </mesh>
-
-      <ArrivalMarker
-        position={[
-          destination.entrancePosition[0],
-          0.07,
-          destination.entrancePosition[2],
-        ]}
-        color="#e1ad59"
-      />
     </group>
   )
 }
@@ -292,6 +762,8 @@ function Landmark({ destination }: { destination: CityDestination }) {
         color={destination.color}
         isOcclusionRoot={false}
       />
+
+      <BuildingShellDetails destination={destination} />
 
       {destination.id === 'resonance' && (
         <ResonanceDetails destination={destination} />
@@ -308,7 +780,7 @@ function StartPortal() {
   return (
     <group position={[0, 3.1, 54]}>
       <mesh>
-        <torusGeometry args={[2.6, 0.2, 18, 72]} />
+        <torusGeometry args={[2.6, 0.2, 32, 128]} />
         <meshStandardMaterial
           color="#65e6f3"
           emissive="#287887"
@@ -538,10 +1010,10 @@ function Car({
     const steeringDirection =
       Number(movingLeft) - Number(movingRight)
 
-    const maxForwardSpeed = 8
+    const maxForwardSpeed = 12
     const maxReverseSpeed = 3.2
-    const acceleration = 5.5
-    const reverseAcceleration = 3.8
+    const acceleration = 9
+    const reverseAcceleration = 5
     const braking = 9
     const rollingResistance = 8
     const turningSpeed = 1.75
@@ -783,7 +1255,7 @@ function CityScene({
   isDestinationOpen,
   onCloseDestination,
 }: CitySceneProps) {
-  const roadCoordinates = [-42, -21, 0, 21, 42]
+  const blockCoordinates = [-31.5, -10.5, 10.5, 31.5]
 
   return (
     <>
@@ -836,8 +1308,18 @@ function CityScene({
         </mesh>
       </RigidBody>
 
+      {/* Raised blocks separate the buildings from the asphalt like sidewalks. */}
+      {blockCoordinates.flatMap((blockX) =>
+        blockCoordinates.map((blockZ) => (
+          <CityBlock
+            position={[blockX, blockZ]}
+            key={`block-${blockX}-${blockZ}`}
+          />
+        )),
+      )}
+
       {/* Five north-south and five east-west streets form four districts. */}
-      {roadCoordinates.map((coordinate) => (
+      {ROAD_COORDINATES.map((coordinate) => (
         <Road
           position={[coordinate, 0]}
           length={110}
@@ -845,7 +1327,7 @@ function CityScene({
           key={`vertical-${coordinate}`}
         />
       ))}
-      {roadCoordinates.map((coordinate) => (
+      {ROAD_COORDINATES.map((coordinate) => (
         <Road
           position={[0, coordinate]}
           length={90}
@@ -853,6 +1335,11 @@ function CityScene({
           key={`horizontal-${coordinate}`}
         />
       ))}
+
+      <Crosswalk position={[7, 0]} orientation="horizontal" />
+      <Crosswalk position={[-7, 0]} orientation="horizontal" />
+      <Crosswalk position={[0, 7]} orientation="vertical" />
+      <Crosswalk position={[0, -7]} orientation="vertical" />
 
       {/* The central plaza is the navigation landmark between all districts. */}
       <mesh position={[0, 0.055, 0]}>

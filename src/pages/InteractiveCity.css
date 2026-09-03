@@ -137,6 +137,41 @@
     letter-spacing: 0.025em;
   }
 
+  .city-building-sign {
+    display: flex;
+    width: max-content;
+    align-items: center;
+    gap: 0.38rem;
+    border: 1px solid currentColor;
+    border-radius: 0.38rem;
+    padding: 0.28rem 0.42rem 0.28rem 0.3rem;
+    background: rgba(7, 12, 25, 0.92);
+    box-shadow:
+      0 0.45rem 1.1rem rgba(0, 0, 0, 0.35),
+      0 0 0.9rem currentColor;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .city-building-sign span {
+    display: grid;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    place-items: center;
+    border: 1px solid currentColor;
+    border-radius: 0.25rem;
+    font-size: 0.56rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .city-building-sign strong {
+    color: #fff5e7;
+    font-size: 0.5rem;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+  }
+
   .interactive-city-prompt {
     position: fixed;
     z-index: 3;
