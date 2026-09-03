@@ -1,4 +1,12 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { useNavigate } from 'react-router'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Html, Instance, Instances, useGLTF } from '@react-three/drei'
@@ -2472,6 +2480,30 @@ function InteractiveCity() {
     },
     [],
   )
+  const startMobileControl = useCallback(
+    (
+      control: MobileMovementControl,
+      event: ReactPointerEvent<HTMLButtonElement>,
+    ) => {
+      event.preventDefault()
+      event.currentTarget.setPointerCapture(event.pointerId)
+      setMobileControl(control, true)
+    },
+    [setMobileControl],
+  )
+  const stopMobileControl = useCallback(
+    (
+      control: MobileMovementControl,
+      event: ReactPointerEvent<HTMLButtonElement>,
+    ) => {
+      setMobileControl(control, false)
+
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
+    },
+    [setMobileControl],
+  )
   const resetMobileControls = useCallback(() => {
     mobileControls.current.forward = false
     mobileControls.current.backward = false
@@ -2604,13 +2636,9 @@ function InteractiveCity() {
   }, [musicVolume])
 
   useEffect(() => {
-    window.addEventListener('pointerup', resetMobileControls)
-    window.addEventListener('pointercancel', resetMobileControls)
     window.addEventListener('blur', resetMobileControls)
 
     return () => {
-      window.removeEventListener('pointerup', resetMobileControls)
-      window.removeEventListener('pointercancel', resetMobileControls)
       window.removeEventListener('blur', resetMobileControls)
     }
   }, [resetMobileControls])
@@ -2695,10 +2723,9 @@ function InteractiveCity() {
             type="button"
             className="mobile-control-up"
             aria-label="Drive forward"
-            onPointerDown={() => setMobileControl('forward', true)}
-            onPointerUp={() => setMobileControl('forward', false)}
-            onPointerCancel={() => setMobileControl('forward', false)}
-            onPointerLeave={() => setMobileControl('forward', false)}
+            onPointerDown={(event) => startMobileControl('forward', event)}
+            onPointerUp={(event) => stopMobileControl('forward', event)}
+            onPointerCancel={(event) => stopMobileControl('forward', event)}
           >
             ↑
           </button>
@@ -2706,10 +2733,9 @@ function InteractiveCity() {
             type="button"
             className="mobile-control-left"
             aria-label="Steer left"
-            onPointerDown={() => setMobileControl('left', true)}
-            onPointerUp={() => setMobileControl('left', false)}
-            onPointerCancel={() => setMobileControl('left', false)}
-            onPointerLeave={() => setMobileControl('left', false)}
+            onPointerDown={(event) => startMobileControl('left', event)}
+            onPointerUp={(event) => stopMobileControl('left', event)}
+            onPointerCancel={(event) => stopMobileControl('left', event)}
           >
             ←
           </button>
@@ -2717,10 +2743,9 @@ function InteractiveCity() {
             type="button"
             className="mobile-control-down"
             aria-label="Reverse"
-            onPointerDown={() => setMobileControl('backward', true)}
-            onPointerUp={() => setMobileControl('backward', false)}
-            onPointerCancel={() => setMobileControl('backward', false)}
-            onPointerLeave={() => setMobileControl('backward', false)}
+            onPointerDown={(event) => startMobileControl('backward', event)}
+            onPointerUp={(event) => stopMobileControl('backward', event)}
+            onPointerCancel={(event) => stopMobileControl('backward', event)}
           >
             ↓
           </button>
@@ -2728,10 +2753,9 @@ function InteractiveCity() {
             type="button"
             className="mobile-control-right"
             aria-label="Steer right"
-            onPointerDown={() => setMobileControl('right', true)}
-            onPointerUp={() => setMobileControl('right', false)}
-            onPointerCancel={() => setMobileControl('right', false)}
-            onPointerLeave={() => setMobileControl('right', false)}
+            onPointerDown={(event) => startMobileControl('right', event)}
+            onPointerUp={(event) => stopMobileControl('right', event)}
+            onPointerCancel={(event) => stopMobileControl('right', event)}
           >
             →
           </button>

@@ -821,16 +821,16 @@
     .interactive-city-minimap {
       bottom: 8rem;
       left: 0.75rem;
-      width: clamp(13rem, 56vw, 15rem);
-      padding: 1.15rem 1.3rem 1.05rem;
+      width: clamp(9rem, 38vw, 10.5rem);
+      padding: 0.8rem 0.85rem 0.75rem;
     }
 
     .interactive-city-minimap.is-collapsed {
-      width: 7.2rem;
-      padding: 0.58rem;
+      width: 6.6rem;
+      padding: 0.52rem;
     }
 
     .city-minimap-key {
-      grid-template-columns: 1fr;
+      display: none;
     }
   }
