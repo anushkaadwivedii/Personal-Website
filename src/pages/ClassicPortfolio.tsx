@@ -208,7 +208,7 @@ const interests = [
     symbol: '◉',
     title: 'Crocheting',
     description:
-      'I mostly make plushies and tapestries, usually as gifts for people.',
+      'I mostly crochet plushies and tapestries, usually as gifts or just because I found something fun to make.',
     link: {
       label: 'Visit my crochet shop',
       url: 'https://anushkaadwivedii.github.io/crochet-frontend/',
@@ -218,35 +218,35 @@ const interests = [
     symbol: '▤',
     title: 'Reading',
     description:
-      'I read whenever I get the time, especially when I need a break from being on my laptop.',
+      'I read whenever I get the chance. Mostly fiction, and usually whatever sounds interesting at the time.',
     link: null,
   },
   {
     symbol: '◒',
     title: 'Cycling',
     description:
-      'I like going on long bike rides and using them as an excuse to explore somewhere new.',
+      'I like going on long bike rides, especially when I get to explore somewhere new.',
     link: null,
   },
   {
     symbol: '♫',
     title: 'Ukulele & guitar',
     description:
-      'I’ve been learning to play the ukulele and guitar, mostly through songs I already like.',
+      'I play ukulele and guitar, mostly learning songs I already like.',
     link: null,
   },
   {
     symbol: '↑',
     title: 'Gym',
     description:
-      'I started strength training recently and have really been enjoying it.',
+      'I started going to the gym recently and ended up enjoying it more than I expected.',
     link: null,
   },
   {
     symbol: '✦',
     title: 'Cooking',
     description:
-      'I enjoy cooking and trying new vegetarian recipes, even if they don’t always turn out how I planned.',
+      'I like cooking and trying new vegetarian recipes. Some turn out better than others.',
     link: null,
   },
 ]
