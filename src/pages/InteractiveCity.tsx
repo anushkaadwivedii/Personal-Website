@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Html, Instance, Instances, useGLTF } from '@react-three/drei'
 import {
@@ -7,13 +7,21 @@ import {
   RigidBody,
   type RapierRigidBody,
 } from '@react-three/rapier'
-import { MathUtils, Quaternion, Raycaster, Vector3 } from 'three'
-import type { Group, Object3D } from 'three'
+import {
+  BufferGeometry,
+  Float32BufferAttribute,
+  MathUtils,
+  Quaternion,
+  Raycaster,
+  Vector3,
+} from 'three'
+import type { Group, LineSegments, Object3D } from 'three'
 import {
   cityDestinations,
   districtDefinitions,
   type CityDestination,
 } from '../data/cityDestinations'
+import graduationPhoto from '../assets/graduation.jpg'
 import './InteractiveCity.css'
 
 type BuildingProps = {
@@ -25,6 +33,94 @@ type BuildingProps = {
 
 const BUILDING_HEIGHT_MULTIPLIER = 1.28
 const ROAD_COORDINATES = [-42, -21, 0, 21, 42]
+const RAIN_DROP_COUNT = 1300
+
+function Rain() {
+  const rainRef = useRef<LineSegments>(null)
+  const rainField = useMemo(() => {
+    const positions = new Float32Array(RAIN_DROP_COUNT * 2 * 3)
+    const speeds = new Float32Array(RAIN_DROP_COUNT)
+    const lengths = new Float32Array(RAIN_DROP_COUNT)
+
+    for (let index = 0; index < RAIN_DROP_COUNT; index += 1) {
+      const vertexIndex = index * 6
+      const x = MathUtils.randFloatSpread(116)
+      const y = MathUtils.randFloat(1, 42)
+      const z = MathUtils.randFloatSpread(116)
+      const length = MathUtils.randFloat(0.7, 1.65)
+
+      positions[vertexIndex] = x
+      positions[vertexIndex + 1] = y
+      positions[vertexIndex + 2] = z
+      positions[vertexIndex + 3] = x
+      positions[vertexIndex + 4] = y - length
+      positions[vertexIndex + 5] = z
+      speeds[index] = MathUtils.randFloat(18, 28)
+      lengths[index] = length
+    }
+
+    const geometry = new BufferGeometry()
+    geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+
+    return { geometry, lengths, speeds }
+  }, [])
+
+  useEffect(() => {
+    return () => rainField.geometry.dispose()
+  }, [rainField])
+
+  useFrame((_, delta) => {
+    const positionAttribute = rainRef.current?.geometry.getAttribute(
+      'position',
+    ) as Float32BufferAttribute | undefined
+
+    if (!positionAttribute) {
+      return
+    }
+
+    const positions = positionAttribute.array
+    const frameDelta = Math.min(delta, 0.05)
+
+    for (let index = 0; index < RAIN_DROP_COUNT; index += 1) {
+      const vertexIndex = index * 6
+      const fallDistance = rainField.speeds[index] * frameDelta
+
+      positions[vertexIndex + 1] -= fallDistance
+      positions[vertexIndex + 4] -= fallDistance
+
+      if (positions[vertexIndex + 4] <= 0.12) {
+        const x = MathUtils.randFloatSpread(116)
+        const y = MathUtils.randFloat(32, 44)
+        const z = MathUtils.randFloatSpread(116)
+
+        positions[vertexIndex] = x
+        positions[vertexIndex + 1] = y
+        positions[vertexIndex + 2] = z
+        positions[vertexIndex + 3] = x
+        positions[vertexIndex + 4] = y - rainField.lengths[index]
+        positions[vertexIndex + 5] = z
+      }
+    }
+
+    positionAttribute.needsUpdate = true
+  })
+
+  return (
+    <lineSegments
+      ref={rainRef}
+      geometry={rainField.geometry}
+      frustumCulled={false}
+    >
+      <lineBasicMaterial
+        color="#a7d8e4"
+        transparent
+        opacity={0.4}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </lineSegments>
+  )
+}
 
 type RoadProps = {
   position: [number, number]
@@ -950,19 +1046,20 @@ function Car({
 
     function handleKeyDown(event: KeyboardEvent) {
       const key = event.key.toLowerCase()
+      const isExploreKey = key === ' ' || key === 'spacebar'
 
       if (movementKeys.includes(key)) {
         event.preventDefault()
         pressedKeys.current.add(key)
       }
 
-      if ((key === 'e' || key === 'escape') && isDestinationOpen) {
+      if ((isExploreKey || key === 'escape') && isDestinationOpen) {
         event.preventDefault()
         onCloseDestination()
         return
       }
 
-      if (key === 'e' && nearbyDestination.current) {
+      if (isExploreKey && nearbyDestination.current) {
         event.preventDefault()
         onExploreDestination(nearbyDestination.current)
       }
@@ -1295,6 +1392,8 @@ function CityScene({
         color="#9c87eb"
       />
 
+      <Rain />
+
       {/* The visible ground and its invisible physics floor */}
       <RigidBody type="fixed" colliders={false}>
         <CuboidCollider args={[59, 0.05, 59]} position={[0, -0.05, 0]} />
@@ -1426,13 +1525,13 @@ function InteractiveCity() {
 
       <div className="interactive-city-hud">
         <strong>Anushka City</strong>
-        <span>WASD or arrows to drive · E to explore</span>
+        <span>WASD or arrows to drive · Space to explore</span>
         <small>Portal Gate → Central Plaza → choose a district</small>
       </div>
 
       {nearbyDestination && !activeDestination && (
         <div className="interactive-city-prompt" role="status">
-          <kbd>E</kbd>
+          <kbd>Space</kbd>
           <span>
             Explore <strong>{nearbyDestination.name}</strong>
           </span>
@@ -1441,7 +1540,7 @@ function InteractiveCity() {
 
       {activeDestination && (
         <aside className="interactive-city-location-panel">
-          <p>
+          <p className="city-location-category">
             {
               districtDefinitions.find(
                 (district) => district.id === activeDestination.district,
@@ -1451,7 +1550,34 @@ function InteractiveCity() {
             {activeDestination.category}
           </p>
           <h1>{activeDestination.name}</h1>
-          <span>{activeDestination.description}</span>
+
+          {activeDestination.context && (
+            <p className="city-location-context">
+              {activeDestination.context}
+            </p>
+          )}
+
+          <p className="city-location-summary">
+            {activeDestination.description}
+          </p>
+
+          {activeDestination.id === 'graduation-park' && (
+            <img
+              className="city-location-photo"
+              src={graduationPhoto}
+              alt="Anushka in her graduation gown at UW–Madison"
+            />
+          )}
+
+          {activeDestination.details && (
+            <div className="city-location-details">
+              {activeDestination.details.map((paragraph, index) => (
+                <p key={`${activeDestination.id}-detail-${index}`}>
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          )}
 
           {activeDestination.metric && (
             <div className="city-location-metric">
@@ -1487,7 +1613,7 @@ function InteractiveCity() {
             type="button"
             onClick={closeDestination}
           >
-            Continue driving · E or Esc
+            Continue driving · Space or Esc
           </button>
         </aside>
       )}
