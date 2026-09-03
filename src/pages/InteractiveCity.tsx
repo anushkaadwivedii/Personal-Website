@@ -1835,6 +1835,47 @@ function CityScene({
 
 const MemoizedCityScene = memo(CityScene)
 
+const CITY_MUSIC_SRC = `${import.meta.env.BASE_URL}audio/velvet-rain.mp3`
+const CITY_MUSIC_VOLUME_KEY = 'anushka-city-music-volume'
+const DEFAULT_CITY_MUSIC_VOLUME = 0.28
+
+function getSavedMusicVolume() {
+  const savedVolume = window.localStorage.getItem(CITY_MUSIC_VOLUME_KEY)
+  const parsedVolume = savedVolume === null ? NaN : Number(savedVolume)
+
+  return Number.isFinite(parsedVolume)
+    ? MathUtils.clamp(parsedVolume, 0, 1)
+    : DEFAULT_CITY_MUSIC_VOLUME
+}
+
+function fadeAudioVolume(
+  audio: HTMLAudioElement,
+  targetVolume: number,
+  duration: number,
+  onComplete?: () => void,
+) {
+  const startVolume = audio.volume
+  const startedAt = performance.now()
+  let animationFrame = 0
+
+  const animate = (now: number) => {
+    const progress = Math.min((now - startedAt) / duration, 1)
+    const easedProgress = 1 - (1 - progress) ** 3
+    audio.volume = MathUtils.lerp(startVolume, targetVolume, easedProgress)
+
+    if (progress < 1) {
+      animationFrame = window.requestAnimationFrame(animate)
+      return
+    }
+
+    onComplete?.()
+  }
+
+  animationFrame = window.requestAnimationFrame(animate)
+
+  return () => window.cancelAnimationFrame(animationFrame)
+}
+
 function InteractiveCity() {
   const [nearbyDestination, setNearbyDestination] =
     useState<CityDestination | null>(null)
@@ -1843,12 +1884,99 @@ function InteractiveCity() {
   const [currentArea, setCurrentArea] = useState('Portal Gate')
   const [carPosition, setCarPosition] = useState<[number, number]>([0, 43])
   const [isMapOpen, setIsMapOpen] = useState(true)
+  const [musicVolume, setMusicVolume] = useState(getSavedMusicVolume)
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false)
+  const musicRef = useRef<HTMLAudioElement>(null)
+  const cancelMusicFadeRef = useRef<(() => void) | null>(null)
   const closeDestination = useCallback(() => {
     setActiveDestination(null)
   }, [])
 
+  const toggleMusic = useCallback(async () => {
+    const music = musicRef.current
+
+    if (!music) {
+      return
+    }
+
+    cancelMusicFadeRef.current?.()
+
+    if (music.paused) {
+      music.volume = 0
+
+      try {
+        await music.play()
+        cancelMusicFadeRef.current = fadeAudioVolume(
+          music,
+          musicVolume,
+          700,
+        )
+      } catch {
+        setIsMusicPlaying(false)
+      }
+
+      return
+    }
+
+    cancelMusicFadeRef.current = fadeAudioVolume(music, 0, 450, () => {
+      music.pause()
+      music.volume = musicVolume
+    })
+  }, [musicVolume])
+
+  const updateMusicVolume = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const nextVolume = Number(event.target.value)
+      setMusicVolume(nextVolume)
+      window.localStorage.setItem(CITY_MUSIC_VOLUME_KEY, String(nextVolume))
+
+      if (musicRef.current) {
+        cancelMusicFadeRef.current?.()
+        musicRef.current.volume = nextVolume
+      }
+    },
+    [],
+  )
+
+  useEffect(() => {
+    const music = musicRef.current
+    const pauseMusic = () => {
+      if (!music || music.paused) {
+        return
+      }
+
+      cancelMusicFadeRef.current?.()
+      music.pause()
+      music.volume = musicVolume
+    }
+    const pauseMusicWhenHidden = () => {
+      if (document.hidden) {
+        pauseMusic()
+      }
+    }
+
+    document.addEventListener('visibilitychange', pauseMusicWhenHidden)
+    window.addEventListener('blur', pauseMusic)
+
+    return () => {
+      document.removeEventListener('visibilitychange', pauseMusicWhenHidden)
+      window.removeEventListener('blur', pauseMusic)
+      cancelMusicFadeRef.current?.()
+      music?.pause()
+    }
+  }, [musicVolume])
+
   return (
     <main className="interactive-city-page">
+      <audio
+        ref={musicRef}
+        src={CITY_MUSIC_SRC}
+        loop
+        preload="metadata"
+        onPlay={() => setIsMusicPlaying(true)}
+        onPause={() => setIsMusicPlaying(false)}
+      />
+
       <div className="interactive-city-canvas">
         <Canvas camera={{ position: [0, 8, 14], fov: 55 }}>
           <Physics gravity={[0, -9.81, 0]}>
@@ -1869,10 +1997,37 @@ function InteractiveCity() {
         <strong>{currentArea}</strong>
       </div>
 
-      <div className="interactive-city-hud">
-        <strong>Anushka City</strong>
-        <span>WASD or arrows to drive · Space to explore</span>
-        <small>Portal Gate → Central Plaza → choose a district</small>
+      <div className="interactive-city-audio" aria-label="City soundtrack">
+        <button
+          type="button"
+          className="interactive-city-audio-toggle"
+          aria-label={isMusicPlaying ? 'Pause city music' : 'Play city music'}
+          aria-pressed={isMusicPlaying}
+          onClick={toggleMusic}
+        >
+          <span aria-hidden="true">{isMusicPlaying ? 'Ⅱ' : '▶'}</span>
+        </button>
+
+        <div className="interactive-city-audio-title">
+          <strong>Velvet Rain</strong>
+          <a
+            href="https://pixabay.com/music/beats-velvet-rain-chill-lo-fi-rainy-night-beat-350255/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            VibeVault5 · Pixabay
+          </a>
+        </div>
+
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          value={musicVolume}
+          aria-label="City music volume"
+          onChange={updateMusicVolume}
+        />
       </div>
 
       <CityMiniMap
