@@ -2034,7 +2034,7 @@ function Car({
       keyboardSteering || mobileControls.current.steering
     const mobileAccelerationScale = keyboardThrottle
       ? 1
-      : MathUtils.lerp(0.32, 0.62, Math.abs(throttleDirection))
+      : MathUtils.lerp(0.45, 0.82, Math.abs(throttleDirection))
 
     const maxForwardSpeed = 12
     const maxReverseSpeed = 3.2
@@ -2524,8 +2524,8 @@ function InteractiveCity() {
         )
       }
 
-      mobileControls.current.throttle = -applyDeadZone(y) * 0.45
-      mobileControls.current.steering = -applyDeadZone(x) * 0.55
+      mobileControls.current.throttle = -applyDeadZone(y) * 0.58
+      mobileControls.current.steering = -applyDeadZone(x) * 0.62
       setMobileJoystickPosition({ x, y })
     },
     [],
