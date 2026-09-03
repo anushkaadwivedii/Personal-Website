@@ -341,6 +341,220 @@ function CityPeople() {
   )
 }
 
+type DogWalkerDefinition = {
+  id: string
+  coatColor: string
+  umbrellaColor: string
+  dogColor: string
+  collarColor: string
+  speed: number
+  phase: number
+  dogSide: -1 | 1
+}
+
+const dogWalkers: DogWalkerDefinition[] = [
+  {
+    id: 'coral-dog-walker',
+    coatColor: '#bd655c',
+    umbrellaColor: '#ffab91',
+    dogColor: '#b98765',
+    collarColor: '#65e6f3',
+    speed: 0.88,
+    phase: 0.27,
+    dogSide: 1,
+  },
+  {
+    id: 'lavender-dog-walker',
+    coatColor: '#7774b8',
+    umbrellaColor: '#b9b3ff',
+    dogColor: '#d8c5a1',
+    collarColor: '#ff70a5',
+    speed: 0.96,
+    phase: 0.77,
+    dogSide: -1,
+  },
+]
+
+function DogWalker({ definition }: { definition: DogWalkerDefinition }) {
+  const walkerRef = useRef<Group>(null)
+  const dogRef = useRef<Group>(null)
+  const leftLegRef = useRef<Group>(null)
+  const rightLegRef = useRef<Group>(null)
+  const dogFrontLegsRef = useRef<Group>(null)
+  const dogBackLegsRef = useRef<Group>(null)
+  const routeOffset = definition.phase * perimeterPedestrianPath.length
+  const initialRouteSegment =
+    Math.floor(routeOffset) % perimeterPedestrianPath.length
+  const routeSegment = useRef(initialRouteSegment)
+  const routeProgress = useRef(routeOffset % 1)
+
+  useFrame(({ clock }, delta) => {
+    const walker = walkerRef.current
+
+    if (!walker) {
+      return
+    }
+
+    let start = perimeterPedestrianPath[routeSegment.current]
+    let end =
+      perimeterPedestrianPath[
+        (routeSegment.current + 1) % perimeterPedestrianPath.length
+      ]
+    const segmentLength = Math.hypot(end[0] - start[0], end[1] - start[1])
+
+    routeProgress.current += (definition.speed * delta) / segmentLength
+
+    while (routeProgress.current >= 1) {
+      routeProgress.current -= 1
+      routeSegment.current =
+        (routeSegment.current + 1) % perimeterPedestrianPath.length
+      start = perimeterPedestrianPath[routeSegment.current]
+      end =
+        perimeterPedestrianPath[
+          (routeSegment.current + 1) % perimeterPedestrianPath.length
+        ]
+    }
+
+    walker.position.set(
+      MathUtils.lerp(start[0], end[0], routeProgress.current),
+      0.16,
+      MathUtils.lerp(start[1], end[1], routeProgress.current),
+    )
+    walker.rotation.y = Math.atan2(end[0] - start[0], end[1] - start[1])
+
+    const stride = Math.sin(
+      clock.elapsedTime * definition.speed * 8 + definition.phase * Math.PI * 2,
+    )
+
+    if (leftLegRef.current && rightLegRef.current) {
+      leftLegRef.current.rotation.x = stride * 0.42
+      rightLegRef.current.rotation.x = -stride * 0.42
+    }
+
+    if (dogFrontLegsRef.current && dogBackLegsRef.current) {
+      dogFrontLegsRef.current.rotation.x = stride * 0.5
+      dogBackLegsRef.current.rotation.x = -stride * 0.5
+    }
+
+    if (dogRef.current) {
+      dogRef.current.position.y =
+        Math.abs(stride) * 0.035
+    }
+  })
+
+  const [initialX, initialZ] = perimeterPedestrianPath[initialRouteSegment]
+  const dogX = definition.dogSide * 0.88
+  const leashRotationZ = definition.dogSide === 1 ? -0.72 : 0.72
+
+  return (
+    <group
+      ref={walkerRef}
+      position={[initialX, 0.16, initialZ]}
+      scale={0.58}
+    >
+      <group position={[-definition.dogSide * 0.25, 0, 0]}>
+        <group ref={leftLegRef} position={[-0.15, 0.72, 0]}>
+          <mesh position={[0, -0.36, 0]}>
+            <boxGeometry args={[0.15, 0.72, 0.18]} />
+            <meshStandardMaterial color="#26354d" roughness={0.85} />
+          </mesh>
+        </group>
+        <group ref={rightLegRef} position={[0.15, 0.72, 0]}>
+          <mesh position={[0, -0.36, 0]}>
+            <boxGeometry args={[0.15, 0.72, 0.18]} />
+            <meshStandardMaterial color="#26354d" roughness={0.85} />
+          </mesh>
+        </group>
+        <mesh position={[0, 1.18, 0]}>
+          <capsuleGeometry args={[0.29, 0.6, 5, 9]} />
+          <meshStandardMaterial color={definition.coatColor} roughness={0.8} />
+        </mesh>
+        <mesh position={[0, 1.88, 0]}>
+          <sphereGeometry args={[0.26, 10, 8]} />
+          <meshStandardMaterial color="#c98f70" roughness={0.9} />
+        </mesh>
+        <group position={[0.28, 2.02, 0]} rotation={[0, 0, -0.08]}>
+          <mesh position={[0, 0.25, 0]}>
+            <cylinderGeometry args={[0.024, 0.024, 1.22, 7]} />
+            <meshStandardMaterial color="#8995a4" metalness={0.5} />
+          </mesh>
+          <mesh position={[0, 0.88, 0]}>
+            <sphereGeometry args={[0.82, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2]} />
+            <meshStandardMaterial
+              color={definition.umbrellaColor}
+              roughness={0.55}
+              side={2}
+            />
+          </mesh>
+        </group>
+      </group>
+
+      <mesh
+        position={[definition.dogSide * 0.48, 0.94, 0.08]}
+        rotation={[0, 0, leashRotationZ]}
+      >
+        <cylinderGeometry args={[0.018, 0.018, 1.08, 6]} />
+        <meshStandardMaterial color={definition.collarColor} roughness={0.55} />
+      </mesh>
+
+      <group ref={dogRef} position={[dogX, 0, 0.12]}>
+        <mesh position={[0, 0.42, 0]}>
+          <boxGeometry args={[0.48, 0.42, 0.78]} />
+          <meshStandardMaterial color={definition.dogColor} roughness={0.9} />
+        </mesh>
+        <mesh position={[0, 0.66, 0.48]}>
+          <boxGeometry args={[0.4, 0.4, 0.42]} />
+          <meshStandardMaterial color={definition.dogColor} roughness={0.9} />
+        </mesh>
+        {[-0.15, 0.15].map((earX) => (
+          <mesh position={[earX, 0.88, 0.48]} key={earX}>
+            <coneGeometry args={[0.1, 0.28, 4]} />
+            <meshStandardMaterial color={definition.dogColor} roughness={0.9} />
+          </mesh>
+        ))}
+        <group ref={dogFrontLegsRef} position={[0, 0.31, 0.24]}>
+          {[-0.16, 0.16].map((legX) => (
+            <mesh position={[legX, -0.15, 0]} key={legX}>
+              <boxGeometry args={[0.1, 0.32, 0.12]} />
+              <meshStandardMaterial color={definition.dogColor} roughness={0.9} />
+            </mesh>
+          ))}
+        </group>
+        <group ref={dogBackLegsRef} position={[0, 0.31, -0.24]}>
+          {[-0.16, 0.16].map((legX) => (
+            <mesh position={[legX, -0.15, 0]} key={legX}>
+              <boxGeometry args={[0.1, 0.32, 0.12]} />
+              <meshStandardMaterial color={definition.dogColor} roughness={0.9} />
+            </mesh>
+          ))}
+        </group>
+        <mesh position={[0, 0.64, 0.28]}>
+          <boxGeometry args={[0.5, 0.08, 0.08]} />
+          <meshStandardMaterial
+            color={definition.collarColor}
+            emissive={definition.collarColor}
+            emissiveIntensity={0.3}
+          />
+        </mesh>
+        <mesh position={[0, 0.61, -0.52]} rotation={[-0.6, 0, 0]}>
+          <cylinderGeometry args={[0.045, 0.075, 0.46, 6]} />
+          <meshStandardMaterial color={definition.dogColor} roughness={0.9} />
+        </mesh>
+      </group>
+    </group>
+  )
+}
+
+function CityDogWalkers() {
+  return (
+    <group>
+      {dogWalkers.map((walker) => (
+        <DogWalker definition={walker} key={walker.id} />
+      ))}
+    </group>
+  )
+}
+
 type CyclistDefinition = {
   id: string
   frameColor: string
@@ -2123,6 +2337,7 @@ function CityScene({
 
       <Rain />
       <CityPeople />
+      <CityDogWalkers />
       <CityCyclists />
 
       {/* The visible ground and its invisible physics floor */}

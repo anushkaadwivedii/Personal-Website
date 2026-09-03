@@ -412,8 +412,8 @@ function ClassicPortfolio() {
             During college, I was involved with Alpha Omega Epsilon, a professional and
             social sorority for women and underrepresented genders in STEM, and Women in
             Computing. I also spent a year mentoring students in computer science and
-            math. Outside of work, I love music, crochet, exploring big cities, and
-            taking on projects that are probably more ambitious than they need to be.
+            math. Outside of work, I love music, crochet, exploring big cities, and picking
+            up new technologies whenever I find something interesting to build.
             </p>
 
           </div>
