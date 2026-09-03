@@ -57,8 +57,8 @@ type Project = {
   name: string
   summary: string
   description: string[]
-  metric: string
-  metricLabel: string
+  metric?: string
+  metricLabel?: string
   skills: string[]
   images: ProjectImage[]
   links: ProjectLink[]
@@ -142,8 +142,8 @@ const projects: Project[] = [
       'The first execution uses an AI model to understand and operate the interface. Once the task succeeds, LedgerPilot stores the important actions and element locators so later runs can replay the same capability without calling the model again. The replay system uses ranked locators, checkpoints, and bounded retries to handle small changes in the interface without silently performing the wrong action.',
       'I designed the execution system around four possible outcomes: success, business exceptions, recoverable errors, and hard failures. I also added policy guardrails, sensitive data redaction, approval hashing for generated artifacts, and same session human handoff when the automation should not continue independently. The system is covered by 18 unit and browser integration tests across seven test suites.',
     ],
-    metric: 'MODEL FREE',
-    metricLabel: 'replay after a successful run',
+    metric: '18',
+    metricLabel: 'automated tests',
     skills: ['TypeScript', 'Playwright', 'Zod', 'LLMs', 'Automation'],
     images: [],
     links: [
@@ -186,8 +186,6 @@ const projects: Project[] = [
       'The application contains nine routed views covering the customer experience and the administration workflow. The backend provides seven REST API endpoints for retrieving products, validating and creating orders, populating product information, and updating order status. Product and order data are stored through two MongoDB schemas.',
       'I built the frontend with React, Vite, and Tailwind CSS and used Node.js, Express, and MongoDB for the backend. The project also gave me experience with persistent client state, form validation, authentication, deployment, and maintaining separate frontend and backend applications that communicate through an API.',
     ],
-    metric: '9',
-    metricLabel: 'routed application views',
     skills: ['React', 'Vite', 'Node.js', 'Express', 'MongoDB'],
     images: [],
     links: [
@@ -496,10 +494,12 @@ function ClassicPortfolio() {
                     <p className="project-summary">{project.summary}</p>
 
                     <div className="project-preview-footer">
-                      <div className="project-metric">
-                        <strong>{project.metric}</strong>
-                        <span>{project.metricLabel}</span>
-                      </div>
+                      {project.metric && (
+                        <div className="project-metric">
+                          <strong>{project.metric}</strong>
+                          <span>{project.metricLabel}</span>
+                        </div>
+                      )}
 
                       <span className="project-toggle">
                         <span className="project-open-label">
@@ -572,7 +572,7 @@ function ClassicPortfolio() {
             <div className="section-heading">
               <div>
                 <p className="section-label">04 · Hobbies</p>
-                <h2>The rest of me.</h2>
+                <h2>Hobbies.</h2>
               </div>
             </div>
 

@@ -478,10 +478,10 @@
     display: flex;
     width: max-content;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.45rem;
     border: 1.5px solid currentColor;
     border-radius: 0.5rem;
-    padding: 0.38rem 0.58rem 0.38rem 0.4rem;
+    padding: 0.48rem 0.7rem 0.48rem 0.5rem;
     background: rgba(7, 12, 25, 0.92);
     box-shadow:
       0 0.45rem 1.1rem rgba(0, 0, 0, 0.35),
@@ -490,16 +490,13 @@
     pointer-events: none;
   }
 
-  .city-building-sign span {
-    display: grid;
-    min-width: 1.5rem;
-    height: 1.5rem;
-    place-items: center;
-    border: 1px solid currentColor;
-    border-radius: 0.34rem;
-    font-size: 0.7rem;
-    font-weight: 900;
-    line-height: 1;
+  .city-building-sign::before {
+    width: 0.2rem;
+    height: 1.25rem;
+    border-radius: 999rem;
+    background: currentColor;
+    box-shadow: 0 0 0.65rem currentColor;
+    content: '';
   }
 
   .city-building-sign strong {

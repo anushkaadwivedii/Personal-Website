@@ -341,6 +341,134 @@ function CityPeople() {
   )
 }
 
+type CyclistDefinition = {
+  id: string
+  frameColor: string
+  riderColor: string
+  speed: number
+  phase: number
+}
+
+// Three simple, non-physics cyclists reuse the existing perimeter cycle path.
+// Keeping them to primitive meshes avoids adding model downloads or collision work.
+const perimeterCyclistPath: Array<[number, number]> = [
+  [-48.35, -48.35],
+  [48.35, -48.35],
+  [48.35, 48.35],
+  [-48.35, 48.35],
+]
+
+const cyclists: CyclistDefinition[] = [
+  {
+    id: 'cyan-cyclist',
+    frameColor: '#65e6f3',
+    riderColor: '#d76d91',
+    speed: 3.05,
+    phase: 0.08,
+  },
+  {
+    id: 'gold-cyclist',
+    frameColor: '#f3c969',
+    riderColor: '#477c73',
+    speed: 2.75,
+    phase: 0.42,
+  },
+  {
+    id: 'pink-cyclist',
+    frameColor: '#ff70a5',
+    riderColor: '#7774b8',
+    speed: 3.2,
+    phase: 0.74,
+  },
+]
+
+function Cyclist({ definition }: { definition: CyclistDefinition }) {
+  const cyclistRef = useRef<Group>(null)
+  const routeOffset = definition.phase * perimeterCyclistPath.length
+  const initialRouteSegment =
+    Math.floor(routeOffset) % perimeterCyclistPath.length
+  const routeSegment = useRef(initialRouteSegment)
+  const routeProgress = useRef(routeOffset % 1)
+
+  useFrame((_, delta) => {
+    const cyclist = cyclistRef.current
+
+    if (!cyclist) {
+      return
+    }
+
+    let start = perimeterCyclistPath[routeSegment.current]
+    let end =
+      perimeterCyclistPath[(routeSegment.current + 1) % perimeterCyclistPath.length]
+    const segmentLength = Math.hypot(end[0] - start[0], end[1] - start[1])
+
+    routeProgress.current += (definition.speed * delta) / segmentLength
+
+    while (routeProgress.current >= 1) {
+      routeProgress.current -= 1
+      routeSegment.current =
+        (routeSegment.current + 1) % perimeterCyclistPath.length
+      start = perimeterCyclistPath[routeSegment.current]
+      end =
+        perimeterCyclistPath[(routeSegment.current + 1) % perimeterCyclistPath.length]
+    }
+
+    cyclist.position.set(
+      MathUtils.lerp(start[0], end[0], routeProgress.current),
+      0.12,
+      MathUtils.lerp(start[1], end[1], routeProgress.current),
+    )
+    cyclist.rotation.y = Math.atan2(end[0] - start[0], end[1] - start[1])
+  })
+
+  const [initialX, initialZ] = perimeterCyclistPath[initialRouteSegment]
+
+  return (
+    <group
+      ref={cyclistRef}
+      position={[initialX, 0.12, initialZ]}
+      scale={0.72}
+    >
+      {[-0.72, 0.72].map((wheelZ) => (
+        <mesh
+          position={[0, 0.42, wheelZ]}
+          rotation={[0, Math.PI / 2, 0]}
+          key={wheelZ}
+        >
+          <torusGeometry args={[0.38, 0.055, 6, 14]} />
+          <meshStandardMaterial color="#202a3d" roughness={0.72} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.62, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.055, 0.055, 1.25, 8]} />
+        <meshStandardMaterial
+          color={definition.frameColor}
+          emissive={definition.frameColor}
+          emissiveIntensity={0.38}
+        />
+      </mesh>
+      <mesh position={[0, 0.84, 0.04]} rotation={[0.15, 0, 0]}>
+        <capsuleGeometry args={[0.2, 0.42, 4, 8]} />
+        <meshStandardMaterial color={definition.riderColor} roughness={0.78} />
+      </mesh>
+      <mesh position={[0, 1.25, -0.08]}>
+        <sphereGeometry args={[0.18, 9, 7]} />
+        <meshStandardMaterial color="#c98f70" roughness={0.9} />
+      </mesh>
+    </group>
+  )
+}
+
+function CityCyclists() {
+  return (
+    <group>
+      {cyclists.map((cyclist) => (
+        <Cyclist definition={cyclist} key={cyclist.id} />
+      ))}
+    </group>
+  )
+}
+
 type RoadProps = {
   position: [number, number]
   length: number
@@ -615,7 +743,6 @@ type DestinationVisual = {
 }
 
 type DestinationMark = {
-  symbol: string
   label: string
 }
 
@@ -642,25 +769,25 @@ const destinationVisuals: Record<string, DestinationVisual> = {
 }
 
 const destinationMarks: Record<string, DestinationMark> = {
-  'pmt-college': { symbol: '✓', label: 'PMT' },
-  'uw-research': { symbol: '◌', label: 'UW Lab' },
-  'peer-mentor': { symbol: '∞', label: 'Mentor' },
-  resonance: { symbol: '≈', label: 'Resonance' },
-  codepilot: { symbol: '>_', label: 'CodePilot' },
-  'clinical-analytics': { symbol: '+', label: 'Clinical' },
-  ledgerpilot: { symbol: '▦', label: 'LedgerPilot' },
-  'market-data-engine': { symbol: '↗', label: 'Market Data' },
-  'cozy-corner-project': { symbol: '◇', label: 'Cozy Corner' },
-  'crochet-shop': { symbol: '◎', label: 'Crochet' },
-  library: { symbol: '▤', label: 'Library' },
-  'cycle-hub': { symbol: '○○', label: 'Cycle Hub' },
-  'music-room': { symbol: '♫', label: 'Music Room' },
-  gym: { symbol: 'H', label: 'Gym' },
-  'night-kitchen': { symbol: '⌁', label: 'Night Kitchen' },
-  'about-gallery': { symbol: 'AD', label: 'About' },
-  'graduation-park': { symbol: 'W', label: 'Graduation' },
-  'resume-station': { symbol: 'CV', label: 'Résumé' },
-  'contact-kiosk': { symbol: '@', label: 'Contact' },
+  'pmt-college': { label: 'PMT College' },
+  'uw-research': { label: 'UW Research' },
+  'peer-mentor': { label: 'Peer Mentor' },
+  resonance: { label: 'Resonance' },
+  codepilot: { label: 'CodePilot' },
+  'clinical-analytics': { label: 'Clinical Analytics' },
+  ledgerpilot: { label: 'LedgerPilot' },
+  'market-data-engine': { label: 'Market Data' },
+  'cozy-corner-project': { label: "Anushka's Cozy Corner" },
+  'crochet-shop': { label: 'Crochet Shop' },
+  library: { label: 'After Hours Library' },
+  'cycle-hub': { label: 'Cycle Hub' },
+  'music-room': { label: 'Music Room' },
+  gym: { label: 'Gym' },
+  'night-kitchen': { label: 'Night Kitchen' },
+  'about-gallery': { label: 'About Gallery' },
+  'graduation-park': { label: 'Graduation Park' },
+  'resume-station': { label: 'Résumé Station' },
+  'contact-kiosk': { label: 'Contact Kiosk' },
 }
 
 function BuildingIdentitySign({
@@ -679,12 +806,17 @@ function BuildingIdentitySign({
   }
 
   return (
-    <Html position={position} center distanceFactor={15} occlude>
+    <Html
+      position={position}
+      center
+      distanceFactor={15}
+      occlude
+      zIndexRange={[1, 0]}
+    >
       <div
         className="city-building-sign"
         style={{ borderColor: color, color }}
       >
-        <span aria-hidden="true">{mark.symbol}</span>
         <strong>{mark.label}</strong>
       </div>
     </Html>
@@ -1127,7 +1259,12 @@ function DirectionSign({
         />
       </mesh>
 
-      <Html position={[0, 2.45, 0]} center distanceFactor={13}>
+      <Html
+        position={[0, 2.45, 0]}
+        center
+        distanceFactor={13}
+        zIndexRange={[1, 0]}
+      >
         <div className="city-direction-sign">
           <span>{title}</span>
           {directions.map((direction) => (
@@ -1173,7 +1310,12 @@ function CentralDistrictSignpost() {
         />
       </mesh>
 
-      <Html position={[0, 3.05, 0]} center distanceFactor={10}>
+      <Html
+        position={[0, 3.05, 0]}
+        center
+        distanceFactor={10}
+        zIndexRange={[1, 0]}
+      >
         <div className="city-central-signpost">
           <span>Central Plaza</span>
           <div>
@@ -1981,6 +2123,7 @@ function CityScene({
 
       <Rain />
       <CityPeople />
+      <CityCyclists />
 
       {/* The visible ground and its invisible physics floor */}
       <RigidBody type="fixed" colliders={false}>
@@ -2086,34 +2229,6 @@ function getSavedMusicVolume() {
     : DEFAULT_CITY_MUSIC_VOLUME
 }
 
-function fadeAudioVolume(
-  audio: HTMLAudioElement,
-  targetVolume: number,
-  duration: number,
-  onComplete?: () => void,
-) {
-  const startVolume = audio.volume
-  const startedAt = performance.now()
-  let animationFrame = 0
-
-  const animate = (now: number) => {
-    const progress = Math.min((now - startedAt) / duration, 1)
-    const easedProgress = 1 - (1 - progress) ** 3
-    audio.volume = MathUtils.lerp(startVolume, targetVolume, easedProgress)
-
-    if (progress < 1) {
-      animationFrame = window.requestAnimationFrame(animate)
-      return
-    }
-
-    onComplete?.()
-  }
-
-  animationFrame = window.requestAnimationFrame(animate)
-
-  return () => window.cancelAnimationFrame(animationFrame)
-}
-
 function InteractiveCity() {
   const navigate = useNavigate()
   const [nearbyDestination, setNearbyDestination] =
@@ -2126,7 +2241,6 @@ function InteractiveCity() {
   const [musicVolume, setMusicVolume] = useState(getSavedMusicVolume)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const musicRef = useRef<HTMLAudioElement>(null)
-  const cancelMusicFadeRef = useRef<(() => void) | null>(null)
   const hasStartedMusicRef = useRef(false)
   const mobileControls = useRef<MobileControlState>({
     forward: false,
@@ -2169,17 +2283,15 @@ function InteractiveCity() {
       return false
     }
 
-    cancelMusicFadeRef.current?.()
-    music.volume = 0
+    music.volume = musicVolume
+
+    if (!music.paused) {
+      return true
+    }
 
     try {
       await music.play()
       hasStartedMusicRef.current = true
-      cancelMusicFadeRef.current = fadeAudioVolume(
-        music,
-        musicVolume,
-        700,
-      )
       return true
     } catch {
       setIsMusicPlaying(false)
@@ -2199,11 +2311,8 @@ function InteractiveCity() {
       return
     }
 
-    cancelMusicFadeRef.current?.()
-    cancelMusicFadeRef.current = fadeAudioVolume(music, 0, 450, () => {
-      music.pause()
-      music.volume = musicVolume
-    })
+    music.pause()
+    music.volume = musicVolume
   }, [musicVolume, startMusic])
 
   const updateMusicVolume = useCallback(
@@ -2213,7 +2322,6 @@ function InteractiveCity() {
       window.localStorage.setItem(CITY_MUSIC_VOLUME_KEY, String(nextVolume))
 
       if (musicRef.current) {
-        cancelMusicFadeRef.current?.()
         musicRef.current.volume = nextVolume
       }
     },
@@ -2236,7 +2344,14 @@ function InteractiveCity() {
         removeStartListeners()
       }
     }
-    function startAfterInteraction() {
+    function startAfterInteraction(event: Event) {
+      if (
+        event.target instanceof Element &&
+        event.target.closest('.interactive-city-audio')
+      ) {
+        return
+      }
+
       void attemptAutomaticStart()
     }
 
@@ -2254,7 +2369,6 @@ function InteractiveCity() {
         return
       }
 
-      cancelMusicFadeRef.current?.()
       music.pause()
       music.volume = musicVolume
     }
@@ -2270,7 +2384,6 @@ function InteractiveCity() {
     return () => {
       document.removeEventListener('visibilitychange', pauseMusicWhenHidden)
       window.removeEventListener('blur', pauseMusic)
-      cancelMusicFadeRef.current?.()
       music?.pause()
     }
   }, [musicVolume])
@@ -2294,7 +2407,7 @@ function InteractiveCity() {
         src={CITY_MUSIC_SRC}
         autoPlay
         loop
-        preload="metadata"
+        preload="auto"
         onPlay={() => setIsMusicPlaying(true)}
         onPause={() => setIsMusicPlaying(false)}
       />

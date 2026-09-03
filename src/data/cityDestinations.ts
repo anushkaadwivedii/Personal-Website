@@ -205,8 +205,8 @@ export const cityDestinations: CityDestination[] = [
     buildingPosition: [35.5, 3.4, -31.5],
     buildingScale: [6, 6.8, 12],
     entrancePosition: [35.5, 0, -24.2],
-    metric: 'Model free',
-    metricLabel: 'replay after a successful run',
+    metric: '18',
+    metricLabel: 'automated tests',
     skills: ['TypeScript', 'Playwright', 'Zod', 'LLMs', 'Automation'],
     links: [
       {
@@ -257,8 +257,6 @@ export const cityDestinations: CityDestination[] = [
     buildingPosition: [14.5, 2.9, -10.5],
     buildingScale: [6, 5.8, 12],
     entrancePosition: [14.5, 0, -3.2],
-    metric: '9 views',
-    metricLabel: 'across the application',
     skills: ['React', 'Vite', 'Node.js', 'Express', 'MongoDB'],
     links: [
       {

@@ -11,8 +11,8 @@ function LandingPage() {
 
         <div className="landing-introduction">
           <p>
-            Hey, I’m Anushka! I’m a recent grad, and I made this portfolio to
-            share a little about myself and the things I’ve worked on.
+            Hey, I'm Anushka! I'm a recent grad, and I made this portfolio to
+            share a little about myself and the things I've worked on.
           </p>
           <p>
             There are two ways to explore it: you can stick with the classic
@@ -42,7 +42,7 @@ function LandingPage() {
           <div className="portal-copy">
             <span className="portal-number">01</span>
             <h2>Classic portfolio</h2>
-            <p>Projects, experience, interests, and contact information.</p>
+            <p>Projects, experience, hobbies, and contact information.</p>
           </div>
         </Link>
 

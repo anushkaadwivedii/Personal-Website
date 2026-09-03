@@ -642,6 +642,10 @@
   text-transform: uppercase;
 }
 
+.project-toggle:only-child {
+  margin-left: auto;
+}
+
 .project-toggle::after {
   content: ' +';
 }
