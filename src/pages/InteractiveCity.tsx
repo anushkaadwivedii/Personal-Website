@@ -1884,8 +1884,6 @@ type MobileControlState = {
   right: boolean
 }
 
-type MobileMovementControl = keyof MobileControlState
-
 function getCurrentArea(x: number, z: number) {
   if (z > 40 && Math.abs(x) < 8) {
     return 'Portal Gate'
@@ -2471,47 +2469,75 @@ function InteractiveCity() {
     left: false,
     right: false,
   })
+  const [mobileJoystickPosition, setMobileJoystickPosition] = useState({
+    x: 0,
+    y: 0,
+  })
   const closeDestination = useCallback(() => {
     setActiveDestination(null)
   }, [])
-  const setMobileControl = useCallback(
-    (control: MobileMovementControl, isPressed: boolean) => {
-      mobileControls.current[control] = isPressed
-    },
-    [],
-  )
-  const startMobileControl = useCallback(
-    (
-      control: MobileMovementControl,
-      event: ReactPointerEvent<HTMLButtonElement>,
-    ) => {
-      event.preventDefault()
-      event.currentTarget.setPointerCapture(event.pointerId)
-      setMobileControl(control, true)
-    },
-    [setMobileControl],
-  )
-  const stopMobileControl = useCallback(
-    (
-      control: MobileMovementControl,
-      event: ReactPointerEvent<HTMLButtonElement>,
-    ) => {
-      setMobileControl(control, false)
-
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId)
-      }
-    },
-    [setMobileControl],
-  )
   const resetMobileControls = useCallback(() => {
     mobileControls.current.forward = false
     mobileControls.current.backward = false
     mobileControls.current.left = false
     mobileControls.current.right = false
   }, [])
-  const exploreFromMobile = useCallback(() => {
+  const resetMobileJoystick = useCallback(() => {
     resetMobileControls()
+    setMobileJoystickPosition({ x: 0, y: 0 })
+  }, [resetMobileControls])
+  const updateMobileJoystick = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>) => {
+      const bounds = event.currentTarget.getBoundingClientRect()
+      const radius = Math.min(bounds.width, bounds.height) / 2
+      const x = MathUtils.clamp(
+        (event.clientX - (bounds.left + bounds.width / 2)) / radius,
+        -1,
+        1,
+      )
+      const y = MathUtils.clamp(
+        (event.clientY - (bounds.top + bounds.height / 2)) / radius,
+        -1,
+        1,
+      )
+      const deadZone = 0.16
+
+      mobileControls.current.forward = y < -deadZone
+      mobileControls.current.backward = y > deadZone
+      mobileControls.current.left = x < -deadZone
+      mobileControls.current.right = x > deadZone
+      setMobileJoystickPosition({ x, y })
+    },
+    [],
+  )
+  const startMobileJoystick = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>) => {
+      event.preventDefault()
+      event.currentTarget.setPointerCapture(event.pointerId)
+      updateMobileJoystick(event)
+    },
+    [updateMobileJoystick],
+  )
+  const moveMobileJoystick = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>) => {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        updateMobileJoystick(event)
+      }
+    },
+    [updateMobileJoystick],
+  )
+  const stopMobileJoystick = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>) => {
+      resetMobileJoystick()
+
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
+    },
+    [resetMobileJoystick],
+  )
+  const exploreFromMobile = useCallback(() => {
+    resetMobileJoystick()
 
     if (activeDestination) {
       closeDestination()
@@ -2521,7 +2547,7 @@ function InteractiveCity() {
     if (nearbyDestination) {
       setActiveDestination(nearbyDestination)
     }
-  }, [activeDestination, closeDestination, nearbyDestination, resetMobileControls])
+  }, [activeDestination, closeDestination, nearbyDestination, resetMobileJoystick])
 
   const startMusic = useCallback(async () => {
     const music = musicRef.current
@@ -2636,12 +2662,12 @@ function InteractiveCity() {
   }, [musicVolume])
 
   useEffect(() => {
-    window.addEventListener('blur', resetMobileControls)
+    window.addEventListener('blur', resetMobileJoystick)
 
     return () => {
-      window.removeEventListener('blur', resetMobileControls)
+      window.removeEventListener('blur', resetMobileJoystick)
     }
-  }, [resetMobileControls])
+  }, [resetMobileJoystick])
 
   return (
     <main className="interactive-city-page">
@@ -2718,48 +2744,25 @@ function InteractiveCity() {
       />
 
       <div className="interactive-city-mobile-controls" aria-label="Driving controls">
-        <div className="mobile-drive-pad">
-          <button
-            type="button"
-            className="mobile-control-up"
-            aria-label="Drive forward"
-            onPointerDown={(event) => startMobileControl('forward', event)}
-            onPointerUp={(event) => stopMobileControl('forward', event)}
-            onPointerCancel={(event) => stopMobileControl('forward', event)}
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-            className="mobile-control-left"
-            aria-label="Steer left"
-            onPointerDown={(event) => startMobileControl('left', event)}
-            onPointerUp={(event) => stopMobileControl('left', event)}
-            onPointerCancel={(event) => stopMobileControl('left', event)}
-          >
-            ←
-          </button>
-          <button
-            type="button"
-            className="mobile-control-down"
-            aria-label="Reverse"
-            onPointerDown={(event) => startMobileControl('backward', event)}
-            onPointerUp={(event) => stopMobileControl('backward', event)}
-            onPointerCancel={(event) => stopMobileControl('backward', event)}
-          >
-            ↓
-          </button>
-          <button
-            type="button"
-            className="mobile-control-right"
-            aria-label="Steer right"
-            onPointerDown={(event) => startMobileControl('right', event)}
-            onPointerUp={(event) => stopMobileControl('right', event)}
-            onPointerCancel={(event) => stopMobileControl('right', event)}
-          >
-            →
-          </button>
-        </div>
+        <button
+          type="button"
+          className="mobile-drive-trackpad"
+          aria-label="Drag to drive and steer"
+          onPointerDown={startMobileJoystick}
+          onPointerMove={moveMobileJoystick}
+          onPointerUp={stopMobileJoystick}
+          onPointerCancel={stopMobileJoystick}
+          onLostPointerCapture={resetMobileJoystick}
+        >
+          <span className="mobile-drive-trackpad-label">Drag to drive</span>
+          <span
+            className="mobile-drive-trackpad-knob"
+            aria-hidden="true"
+            style={{
+              transform: `translate(calc(-50% + ${mobileJoystickPosition.x * 2.15}rem), calc(-50% + ${mobileJoystickPosition.y * 2.15}rem))`,
+            }}
+          />
+        </button>
 
         <button
           type="button"
