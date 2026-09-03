@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Html, Instance, Instances, useGLTF } from '@react-three/drei'
 import {
@@ -151,7 +151,7 @@ function Road({ position, length, orientation }: RoadProps) {
       <mesh
         position={[
           position[0],
-          orientation === 'horizontal' ? 0.03 : 0.024,
+          0.04,
           position[1],
         ]}
         rotation={[-Math.PI / 2, 0, 0]}
@@ -299,12 +299,6 @@ function LitEntrance({
           roughness={0.18}
         />
       </mesh>
-      <pointLight
-        position={[0, 0.2, 1.1]}
-        color={color}
-        intensity={7}
-        distance={5}
-      />
     </group>
   )
 }
@@ -373,13 +367,6 @@ function ArrivalMarker({
           metalness={0.18}
         />
       </mesh>
-      <pointLight
-        position={[0, 0.28, 0]}
-        color={color}
-        intensity={1.8}
-        distance={2.8}
-        decay={2}
-      />
     </group>
   )
 }
@@ -939,34 +926,375 @@ function DirectionSign({
   )
 }
 
-const backgroundBuildings: BuildingProps[] = [
-  { position: [-53, 4, -42], scale: [8, 8, 8] },
-  { position: [-53, 6, -20], scale: [8, 12, 10], color: '#162541' },
-  { position: [-53, 3.5, 3], scale: [8, 7, 10] },
-  { position: [-53, 7, 25], scale: [8, 14, 10], color: '#1a2948' },
-  { position: [-53, 4.5, 47], scale: [8, 9, 8] },
-  { position: [53, 6.5, -42], scale: [8, 13, 8], color: '#172845' },
-  { position: [53, 4, -20], scale: [8, 8, 10] },
-  { position: [53, 7.5, 3], scale: [8, 15, 10], color: '#1a2b4b' },
-  { position: [53, 4.5, 25], scale: [8, 9, 10] },
-  { position: [53, 6, 47], scale: [8, 12, 8], color: '#182743' },
-  { position: [-42, 5, -53], scale: [8, 10, 8] },
-  { position: [-20, 7, -53], scale: [10, 14, 8], color: '#1a2948' },
-  { position: [3, 4, -53], scale: [10, 8, 8] },
-  { position: [25, 6, -53], scale: [10, 12, 8], color: '#172845' },
-  { position: [47, 4.5, -53], scale: [8, 9, 8] },
+const centralDistrictDirections = [
+  { arrow: '↖', label: 'Experience', district: 'experience' },
+  { arrow: '↗', label: 'Projects', district: 'projects' },
+  { arrow: '↙', label: 'Hobbies', district: 'hobbies' },
+  { arrow: '↘', label: 'About', district: 'about' },
 ]
+
+function CentralDistrictSignpost() {
+  return (
+    <group position={[0, 0.35, 0]}>
+      <mesh position={[0, 1.8, 0]}>
+        <cylinderGeometry args={[0.1, 0.14, 3.6, 12]} />
+        <meshStandardMaterial
+          color="#8390a2"
+          roughness={0.35}
+          metalness={0.72}
+        />
+      </mesh>
+
+      <mesh position={[0, 3.65, 0]}>
+        <sphereGeometry args={[0.18, 12, 8]} />
+        <meshStandardMaterial
+          color="#65e6f3"
+          emissive="#287887"
+          emissiveIntensity={1.8}
+        />
+      </mesh>
+
+      <Html position={[0, 3.05, 0]} center distanceFactor={10}>
+        <div className="city-central-signpost">
+          <span>Central Plaza</span>
+          <div>
+            {centralDistrictDirections.map((direction) => (
+              <p
+                className={`city-central-direction city-central-direction--${direction.district}`}
+                key={direction.district}
+              >
+                <b aria-hidden="true">{direction.arrow}</b>
+                <strong>{direction.label}</strong>
+              </p>
+            ))}
+          </div>
+        </div>
+      </Html>
+    </group>
+  )
+}
+
+type CityMiniMapProps = {
+  carPosition: [number, number]
+  isOpen: boolean
+  onToggle: () => void
+}
+
+const miniMapDistricts = [
+  { id: 'experience', label: 'Experience', x: -45, y: -45 },
+  { id: 'projects', label: 'Projects', x: 3.25, y: -45 },
+  { id: 'hobbies', label: 'Hobbies', x: -45, y: 3.25 },
+  { id: 'about', label: 'About', x: 3.25, y: 3.25 },
+]
+
+function CityMiniMap({ carPosition, isOpen, onToggle }: CityMiniMapProps) {
+  return (
+    <aside
+      className={`interactive-city-minimap${isOpen ? '' : ' is-collapsed'}`}
+      aria-label="City minimap"
+    >
+      <div className="city-minimap-heading">
+        <div>
+          <span>Navigation</span>
+          <strong>City map</strong>
+        </div>
+        <button
+          type="button"
+          aria-expanded={isOpen}
+          aria-label={isOpen ? 'Collapse minimap' : 'Open minimap'}
+          onClick={onToggle}
+        >
+          {isOpen ? '−' : '+'}
+        </button>
+      </div>
+
+      {isOpen && (
+        <>
+          <svg
+            className="city-minimap-map"
+            viewBox="-55 -55 110 110"
+            role="img"
+            aria-label="Map showing the four city districts and your current position"
+          >
+            <rect className="city-minimap-ground" x="-52" y="-52" width="104" height="104" rx="4" />
+
+            {miniMapDistricts.map((district) => (
+              <g className={`city-minimap-district city-minimap-district--${district.id}`} key={district.id}>
+                <rect x={district.x} y={district.y} width="41.75" height="41.75" rx="3" />
+                <text x={district.x + 20.875} y={district.y + 22.5} textAnchor="middle">
+                  {district.label}
+                </text>
+              </g>
+            ))}
+
+            <g className="city-minimap-roads" aria-hidden="true">
+              {ROAD_COORDINATES.map((coordinate) => (
+                <line x1={coordinate} y1="-45" x2={coordinate} y2="45" key={`map-v-${coordinate}`} />
+              ))}
+              {ROAD_COORDINATES.map((coordinate) => (
+                <line x1="-45" y1={coordinate} x2="45" y2={coordinate} key={`map-h-${coordinate}`} />
+              ))}
+            </g>
+
+            <rect className="city-minimap-cycle-path" x="-48.35" y="-48.35" width="96.7" height="96.7" rx="2" />
+            <circle className="city-minimap-plaza" cx="0" cy="0" r="4" />
+
+            <g className="city-minimap-destinations">
+              {cityDestinations.map((destination) => (
+                <circle
+                  cx={destination.buildingPosition[0]}
+                  cy={destination.buildingPosition[2]}
+                  r="1.45"
+                  key={`map-${destination.id}`}
+                >
+                  <title>{destination.name}</title>
+                </circle>
+              ))}
+            </g>
+
+            <g className="city-minimap-player" transform={`translate(${carPosition[0]} ${carPosition[1]})`}>
+              <circle className="city-minimap-player-pulse" r="4" />
+              <circle r="2.15" />
+            </g>
+          </svg>
+
+          <div className="city-minimap-key" aria-hidden="true">
+            <span><i className="experience" />Experience</span>
+            <span><i className="projects" />Projects</span>
+            <span><i className="hobbies" />Hobbies</span>
+            <span><i className="about" />About</span>
+          </div>
+        </>
+      )}
+    </aside>
+  )
+}
+
+type PerimeterTree = {
+  position: [number, number, number]
+  scale: number
+}
+
+const perimeterBlockCenters = [-31.5, -10.5, 10.5, 31.5]
+const perimeterTreeOffsets = perimeterBlockCenters.flatMap((center) => [
+  center - 4,
+  center + 4,
+])
+
+const perimeterTrees: PerimeterTree[] = [
+  ...perimeterTreeOffsets.map((z, index) => ({
+    position: [-47.4, 0.1, z] as [number, number, number],
+    scale: 0.82 + (index % 4) * 0.09,
+  })),
+  ...perimeterTreeOffsets.map((z, index) => ({
+    position: [47.4, 0.1, z] as [number, number, number],
+    scale: 0.88 + ((index + 2) % 4) * 0.08,
+  })),
+  ...perimeterTreeOffsets.map((x, index) => ({
+    position: [x, 0.1, -47.4] as [number, number, number],
+    scale: 0.84 + ((index + 1) % 4) * 0.09,
+  })),
+  ...perimeterTreeOffsets.map((x, index) => ({
+    position: [x, 0.1, 47.4] as [number, number, number],
+    scale: 0.86 + ((index + 3) % 4) * 0.08,
+  })),
+]
+
+const perimeterLamps: Array<[number, number, number]> = [
+  ...perimeterBlockCenters.map(
+    (z) => [-46.6, 0.12, z] as [number, number, number],
+  ),
+  ...perimeterBlockCenters.map(
+    (z) => [46.6, 0.12, z] as [number, number, number],
+  ),
+  ...perimeterBlockCenters.map(
+    (x) => [x, 0.12, -46.6] as [number, number, number],
+  ),
+  ...perimeterBlockCenters.map(
+    (x) => [x, 0.12, 46.6] as [number, number, number],
+  ),
+]
+
+const perimeterGrassSections = [
+  { position: [-49, 0.012, 0], size: [6, 0.02, 104] },
+  { position: [49, 0.012, 0], size: [6, 0.02, 104] },
+  { position: [0, 0.013, -49], size: [104, 0.02, 6] },
+  { position: [0, 0.013, 49], size: [104, 0.02, 6] },
+] satisfies Array<{
+  position: [number, number, number]
+  size: [number, number, number]
+}>
+
+// These narrower strips sit above the roads along the outside edge. They keep
+// the landscaped perimeter visually connected without closing the driveable
+// street entrances on the city-facing side.
+const perimeterOuterRibbons = [
+  { position: [-51, 0.046, 0], size: [2, 0.012, 104] },
+  { position: [51, 0.046, 0], size: [2, 0.012, 104] },
+  { position: [0, 0.047, -51], size: [104, 0.012, 2] },
+  { position: [0, 0.047, 51], size: [104, 0.012, 2] },
+] satisfies Array<{
+  position: [number, number, number]
+  size: [number, number, number]
+}>
+
+const perimeterPathSections = [
+  { position: [-48.35, 0.054, 0], size: [1.55, 0.012, 104] },
+  { position: [48.35, 0.054, 0], size: [1.55, 0.012, 104] },
+  { position: [0, 0.055, -48.35], size: [104, 0.012, 1.55] },
+  { position: [0, 0.055, 48.35], size: [104, 0.012, 1.55] },
+] satisfies Array<{
+  position: [number, number, number]
+  size: [number, number, number]
+}>
+
+function PerimeterGreenBelt() {
+  return (
+    <group>
+      {perimeterGrassSections.map((strip) => (
+        <mesh
+          position={strip.position}
+          key={`green-${strip.position.join('-')}`}
+        >
+          <boxGeometry args={strip.size} />
+          <meshStandardMaterial color="#102c2a" roughness={0.96} />
+        </mesh>
+      ))}
+
+      {perimeterOuterRibbons.map((ribbon) => (
+        <mesh
+          position={ribbon.position}
+          key={`green-ribbon-${ribbon.position.join('-')}`}
+        >
+          <boxGeometry args={ribbon.size} />
+          <meshStandardMaterial color="#102c2a" roughness={0.96} />
+        </mesh>
+      ))}
+
+      {perimeterPathSections.map((path) => (
+        <mesh
+          position={path.position}
+          key={`path-${path.position.join('-')}`}
+        >
+          <boxGeometry args={path.size} />
+          <meshStandardMaterial color="#26353b" roughness={0.88} />
+        </mesh>
+      ))}
+
+      <RigidBody type="fixed" colliders={false}>
+        {perimeterTrees.map((tree) => (
+          <CuboidCollider
+            args={[0.24 * tree.scale, 1.15 * tree.scale, 0.24 * tree.scale]}
+            position={[
+              tree.position[0],
+              tree.position[1] + 1.15 * tree.scale,
+              tree.position[2],
+            ]}
+            key={`tree-collider-${tree.position[0]}-${tree.position[2]}`}
+          />
+        ))}
+      </RigidBody>
+
+      <Instances limit={perimeterTrees.length}>
+        <cylinderGeometry args={[0.22, 0.3, 2.3, 7]} />
+        <meshStandardMaterial color="#5a4238" roughness={0.95} />
+        {perimeterTrees.map((tree) => (
+          <Instance
+            position={[
+              tree.position[0],
+              tree.position[1] + 1.15 * tree.scale,
+              tree.position[2],
+            ]}
+            scale={tree.scale}
+            key={`tree-trunk-${tree.position[0]}-${tree.position[2]}`}
+          />
+        ))}
+      </Instances>
+
+      <Instances limit={perimeterTrees.length}>
+        <coneGeometry args={[1.2, 2.2, 7]} />
+        <meshStandardMaterial color="#173f3b" roughness={0.9} />
+        {perimeterTrees.map((tree) => (
+          <Instance
+            position={[
+              tree.position[0],
+              tree.position[1] + 2.7 * tree.scale,
+              tree.position[2],
+            ]}
+            scale={tree.scale}
+            key={`tree-lower-${tree.position[0]}-${tree.position[2]}`}
+          />
+        ))}
+      </Instances>
+
+      <Instances limit={perimeterTrees.length}>
+        <coneGeometry args={[0.9, 1.8, 7]} />
+        <meshStandardMaterial color="#245a50" roughness={0.88} />
+        {perimeterTrees.map((tree) => (
+          <Instance
+            position={[
+              tree.position[0],
+              tree.position[1] + 3.65 * tree.scale,
+              tree.position[2],
+            ]}
+            scale={tree.scale}
+            key={`tree-upper-${tree.position[0]}-${tree.position[2]}`}
+          />
+        ))}
+      </Instances>
+
+      <Instances limit={perimeterLamps.length}>
+        <cylinderGeometry args={[0.065, 0.1, 4.8, 10]} />
+        <meshStandardMaterial color="#65717f" roughness={0.35} metalness={0.7} />
+        {perimeterLamps.map(([x, y, z]) => (
+          <Instance position={[x, y + 2.4, z]} key={`lamp-pole-${x}-${z}`} />
+        ))}
+      </Instances>
+
+      <Instances limit={perimeterLamps.length}>
+        <sphereGeometry args={[0.23, 12, 8]} />
+        <meshStandardMaterial
+          color="#ffe3a1"
+          emissive="#ffc96b"
+          emissiveIntensity={2.2}
+          roughness={0.25}
+        />
+        {perimeterLamps.map(([x, y, z]) => (
+          <Instance position={[x, y + 4.85, z]} key={`lamp-bulb-${x}-${z}`} />
+        ))}
+      </Instances>
+
+      <Instances limit={perimeterLamps.length}>
+        <circleGeometry args={[2.8, 28]} />
+        <meshBasicMaterial
+          color="#d69b49"
+          transparent
+          opacity={0.11}
+          depthWrite={false}
+        />
+        {perimeterLamps.map(([x, , z]) => (
+          <Instance
+            position={[x, 0.135, z]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            key={`lamp-glow-${x}-${z}`}
+          />
+        ))}
+      </Instances>
+    </group>
+  )
+}
 
 type CarProps = {
   onNearbyDestinationChange: (destination: CityDestination | null) => void
   onExploreDestination: (destination: CityDestination) => void
   onCurrentAreaChange: (area: string) => void
+  onMapPositionChange: (position: [number, number]) => void
   isDestinationOpen: boolean
   onCloseDestination: () => void
 }
 
 function getCurrentArea(x: number, z: number) {
-  if (z > 43 && Math.abs(x) < 8) {
+  if (z > 40 && Math.abs(x) < 8) {
     return 'Portal Gate'
   }
 
@@ -1001,6 +1329,7 @@ function Car({
   onNearbyDestinationChange,
   onExploreDestination,
   onCurrentAreaChange,
+  onMapPositionChange,
   isDestinationOpen,
   onCloseDestination,
 }: CarProps) {
@@ -1012,6 +1341,7 @@ function Car({
   const wheels = useRef<Object3D[]>([])
   const nearbyDestination = useRef<CityDestination | null>(null)
   const currentArea = useRef('Portal Gate')
+  const mapUpdateElapsed = useRef(0)
   const desiredCameraPosition = useRef(new Vector3())
   const desiredCameraTarget = useRef(new Vector3())
   const cameraTarget = useRef(new Vector3())
@@ -1019,6 +1349,8 @@ function Car({
   const cameraRayOrigin = useRef(new Vector3())
   const cameraRayDirection = useRef(new Vector3())
   const cameraRaycaster = useRef(new Raycaster())
+  const cachedOcclusionScene = useRef<Object3D | null>(null)
+  const occlusionCandidates = useRef<Object3D[]>([])
   const hiddenOccluders = useRef<Object3D[]>([])
   const desiredCarRotation = useRef(new Quaternion())
   const upAxis = useRef(new Vector3(0, 1, 0))
@@ -1199,6 +1531,12 @@ function Car({
       currentSpeed.current = 0
     }
 
+    mapUpdateElapsed.current += delta
+    if (mapUpdateElapsed.current >= 0.125) {
+      mapUpdateElapsed.current = 0
+      onMapPositionChange([boundedX, boundedZ])
+    }
+
     let closestDestination: CityDestination | null = null
     let closestDistanceSquared = 4.2 ** 2
 
@@ -1280,9 +1618,20 @@ function Car({
       )
       cameraRaycaster.current.far = Math.max(cameraDistance - 0.5, 0)
 
+      if (cachedOcclusionScene.current !== cityScene) {
+        cachedOcclusionScene.current = cityScene
+        occlusionCandidates.current = []
+
+        cityScene.traverse((object) => {
+          if (object.userData.cameraOccluder) {
+            occlusionCandidates.current.push(object)
+          }
+        })
+      }
+
       const intersections = cameraRaycaster.current.intersectObjects(
-        cityScene.children,
-        true,
+        occlusionCandidates.current,
+        false,
       )
       const occludersToHide = new Set<Object3D>()
 
@@ -1315,7 +1664,7 @@ function Car({
   return (
     <RigidBody
       ref={carRef}
-      position={[0, 0.42, 48]}
+      position={[0, 0.42, 43]}
       rotation={[0, Math.PI / 2, 0]}
       colliders={false}
       enabledRotations={[false, false, false]}
@@ -1341,6 +1690,7 @@ type CitySceneProps = {
   onNearbyDestinationChange: (destination: CityDestination | null) => void
   onExploreDestination: (destination: CityDestination) => void
   onCurrentAreaChange: (area: string) => void
+  onMapPositionChange: (position: [number, number]) => void
   isDestinationOpen: boolean
   onCloseDestination: () => void
 }
@@ -1349,6 +1699,7 @@ function CityScene({
   onNearbyDestinationChange,
   onExploreDestination,
   onCurrentAreaChange,
+  onMapPositionChange,
   isDestinationOpen,
   onCloseDestination,
 }: CitySceneProps) {
@@ -1421,7 +1772,7 @@ function CityScene({
       {ROAD_COORDINATES.map((coordinate) => (
         <Road
           position={[coordinate, 0]}
-          length={110}
+          length={90}
           orientation="vertical"
           key={`vertical-${coordinate}`}
         />
@@ -1456,10 +1807,8 @@ function CityScene({
         <Landmark destination={destination} key={destination.id} />
       ))}
 
-      {/* These blocks make the playable city continue beyond the four districts. */}
-      {backgroundBuildings.map((building, index) => (
-        <Building {...building} key={`background-building-${index}`} />
-      ))}
+      {/* A lightweight landscaped boundary softens all four city edges. */}
+      <PerimeterGreenBelt />
 
       <StartPortal />
 
@@ -1469,21 +1818,13 @@ function CityScene({
         directions={[{ arrow: '↑', label: 'Central Plaza' }]}
       />
 
-      <DirectionSign
-        position={[4.8, 0, 4.8]}
-        title="Central Plaza"
-        directions={[
-          { arrow: '↖', label: 'Experience' },
-          { arrow: '↗', label: 'Projects' },
-          { arrow: '↙', label: 'Hobbies' },
-          { arrow: '↘', label: 'About' },
-        ]}
-      />
+      <CentralDistrictSignpost />
 
       <Car
         onNearbyDestinationChange={onNearbyDestinationChange}
         onExploreDestination={onExploreDestination}
         onCurrentAreaChange={onCurrentAreaChange}
+        onMapPositionChange={onMapPositionChange}
         isDestinationOpen={isDestinationOpen}
         onCloseDestination={onCloseDestination}
       />
@@ -1492,12 +1833,16 @@ function CityScene({
   )
 }
 
+const MemoizedCityScene = memo(CityScene)
+
 function InteractiveCity() {
   const [nearbyDestination, setNearbyDestination] =
     useState<CityDestination | null>(null)
   const [activeDestination, setActiveDestination] =
     useState<CityDestination | null>(null)
   const [currentArea, setCurrentArea] = useState('Portal Gate')
+  const [carPosition, setCarPosition] = useState<[number, number]>([0, 43])
+  const [isMapOpen, setIsMapOpen] = useState(true)
   const closeDestination = useCallback(() => {
     setActiveDestination(null)
   }, [])
@@ -1507,10 +1852,11 @@ function InteractiveCity() {
       <div className="interactive-city-canvas">
         <Canvas camera={{ position: [0, 8, 14], fov: 55 }}>
           <Physics gravity={[0, -9.81, 0]}>
-            <CityScene
+            <MemoizedCityScene
               onNearbyDestinationChange={setNearbyDestination}
               onExploreDestination={setActiveDestination}
               onCurrentAreaChange={setCurrentArea}
+              onMapPositionChange={setCarPosition}
               isDestinationOpen={activeDestination !== null}
               onCloseDestination={closeDestination}
             />
@@ -1528,6 +1874,12 @@ function InteractiveCity() {
         <span>WASD or arrows to drive · Space to explore</span>
         <small>Portal Gate → Central Plaza → choose a district</small>
       </div>
+
+      <CityMiniMap
+        carPosition={carPosition}
+        isOpen={isMapOpen}
+        onToggle={() => setIsMapOpen((isOpen) => !isOpen)}
+      />
 
       {nearbyDestination && !activeDestination && (
         <div className="interactive-city-prompt" role="status">

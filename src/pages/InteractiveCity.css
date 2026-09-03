@@ -90,6 +90,248 @@
     font-size: 0.62rem;
   }
 
+  .interactive-city-minimap {
+    position: fixed;
+    z-index: 3;
+    bottom: 1rem;
+    left: 1rem;
+    width: 16rem;
+    overflow: hidden;
+    border: 1px solid rgba(101, 230, 243, 0.25);
+    border-radius: 0.9rem;
+    padding: 0.7rem;
+    color: #fff5e7;
+    background:
+      radial-gradient(circle at 20% 0, rgba(101, 230, 243, 0.1), transparent 55%),
+      rgba(8, 12, 29, 0.82);
+    box-shadow:
+      0 0.9rem 2.5rem rgba(0, 0, 0, 0.28),
+      0 0 1.5rem rgba(101, 230, 243, 0.06);
+    backdrop-filter: blur(0.9rem);
+    transition:
+      width 180ms ease,
+      background 180ms ease;
+  }
+
+  .interactive-city-minimap.is-collapsed {
+    width: 7.4rem;
+  }
+
+  .city-minimap-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .city-minimap-heading > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.05rem;
+  }
+
+  .city-minimap-heading span {
+    color: #7e8da5;
+    font-size: 0.48rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .city-minimap-heading strong {
+    font-size: 0.72rem;
+    letter-spacing: 0.025em;
+  }
+
+  .city-minimap-heading button {
+    display: grid;
+    width: 1.65rem;
+    height: 1.65rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid rgba(101, 230, 243, 0.34);
+    border-radius: 50%;
+    padding: 0;
+    color: #65e6f3;
+    background: rgba(101, 230, 243, 0.06);
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .city-minimap-heading button:hover {
+    border-color: #65e6f3;
+    background: rgba(101, 230, 243, 0.12);
+  }
+
+  .city-minimap-map {
+    display: block;
+    width: 100%;
+    margin-top: 0.55rem;
+    border: 1px solid rgba(119, 145, 183, 0.2);
+    border-radius: 0.55rem;
+    background: #070b17;
+  }
+
+  .city-minimap-ground {
+    fill: #101a25;
+    stroke: rgba(49, 105, 102, 0.9);
+    stroke-width: 1.5;
+  }
+
+  .city-minimap-district rect {
+    stroke-width: 0.75;
+  }
+
+  .city-minimap-district text {
+    fill: rgba(255, 245, 231, 0.66);
+    font-size: 3.2px;
+    font-weight: 800;
+    letter-spacing: 0.1px;
+    text-transform: uppercase;
+  }
+
+  .city-minimap-district--experience rect {
+    fill: rgba(225, 173, 89, 0.16);
+    stroke: rgba(225, 173, 89, 0.32);
+  }
+
+  .city-minimap-district--projects rect {
+    fill: rgba(101, 230, 243, 0.14);
+    stroke: rgba(101, 230, 243, 0.3);
+  }
+
+  .city-minimap-district--hobbies rect {
+    fill: rgba(255, 112, 165, 0.14);
+    stroke: rgba(255, 112, 165, 0.3);
+  }
+
+  .city-minimap-district--about rect {
+    fill: rgba(156, 135, 235, 0.15);
+    stroke: rgba(156, 135, 235, 0.32);
+  }
+
+  .city-minimap-roads line {
+    stroke: rgba(7, 10, 17, 0.9);
+    stroke-width: 5.8;
+  }
+
+  .city-minimap-cycle-path {
+    fill: none;
+    stroke: #4b6570;
+    stroke-width: 1.6;
+  }
+
+  .city-minimap-plaza {
+    fill: #1f3352;
+    stroke: rgba(101, 230, 243, 0.65);
+    stroke-width: 0.8;
+  }
+
+  .city-minimap-destinations circle {
+    fill: #fff5e7;
+    stroke: rgba(8, 12, 29, 0.9);
+    stroke-width: 0.55;
+  }
+
+  .city-minimap-player circle:last-child {
+    fill: #ff704d;
+    stroke: #fff5e7;
+    stroke-width: 0.8;
+  }
+
+  .city-minimap-player-pulse {
+    fill: rgba(255, 112, 77, 0.18);
+    stroke: rgba(255, 112, 77, 0.5);
+    stroke-width: 0.6;
+  }
+
+  .city-minimap-key {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .city-minimap-key span {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.3rem;
+    color: #93a0b3;
+    font-size: 0.52rem;
+  }
+
+  .city-minimap-key i {
+    width: 0.42rem;
+    height: 0.42rem;
+    flex: 0 0 auto;
+    border-radius: 50%;
+  }
+
+  .city-minimap-key i.experience { background: #e1ad59; }
+  .city-minimap-key i.projects { background: #65e6f3; }
+  .city-minimap-key i.hobbies { background: #ff70a5; }
+  .city-minimap-key i.about { background: #9c87eb; }
+
+  .city-central-signpost {
+    width: 12rem;
+    color: #fff5e7;
+    filter: drop-shadow(0 0.8rem 1.1rem rgba(0, 0, 0, 0.42));
+    pointer-events: none;
+  }
+
+  .city-central-signpost > span {
+    display: block;
+    width: fit-content;
+    margin: 0 auto 0.3rem;
+    border: 1px solid rgba(101, 230, 243, 0.46);
+    border-radius: 999rem;
+    padding: 0.25rem 0.5rem;
+    color: #65e6f3;
+    background: rgba(8, 12, 29, 0.94);
+    font-size: 0.42rem;
+    font-weight: 900;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .city-central-signpost > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.26rem;
+  }
+
+  .city-central-direction {
+    display: flex;
+    align-items: center;
+    gap: 0.28rem;
+    margin: 0;
+    border: 1px solid currentColor;
+    border-radius: 0.35rem;
+    padding: 0.3rem 0.4rem;
+    background: rgba(8, 12, 29, 0.94);
+  }
+
+  .city-central-direction b {
+    font-size: 0.66rem;
+    line-height: 1;
+  }
+
+  .city-central-direction strong {
+    color: #fff5e7;
+    font-size: 0.46rem;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  .city-central-direction--experience { color: #e1ad59; }
+  .city-central-direction--projects { color: #65e6f3; }
+  .city-central-direction--hobbies { color: #ff70a5; }
+  .city-central-direction--about { color: #9c87eb; }
+
   .city-direction-sign {
     width: max-content;
     min-width: 7.8rem;
@@ -361,6 +603,12 @@
     background: rgba(101, 230, 243, 0.12);
   }
 
+  @media (max-width: 48rem) {
+    .interactive-city-minimap {
+      width: 13rem;
+    }
+  }
+
   @media (max-width: 36rem) {
     .interactive-city-hud {
       right: 50%;
@@ -373,5 +621,20 @@
 
     .interactive-city-prompt {
       bottom: 5rem;
+    }
+
+    .interactive-city-minimap {
+      bottom: 6rem;
+      left: 0.75rem;
+      width: 10.5rem;
+      padding: 0.58rem;
+    }
+
+    .interactive-city-minimap.is-collapsed {
+      width: 7.2rem;
+    }
+
+    .city-minimap-key {
+      grid-template-columns: 1fr;
     }
   }
