@@ -123,6 +123,224 @@ function Rain() {
   )
 }
 
+type PedestrianDefinition = {
+  id: string
+  path: Array<[number, number]>
+  coatColor: string
+  umbrellaColor?: string
+  speed: number
+  phase: number
+}
+
+// This loop sits between the outer road and the tree belt, so pedestrians stay
+// close to the landscaped perimeter without crossing any building footprints.
+const perimeterPedestrianPath: Array<[number, number]> = [
+  [-44.8, -44.8],
+  [44.8, -44.8],
+  [44.8, 44.8],
+  [-44.8, 44.8],
+]
+
+const pedestrians: PedestrianDefinition[] = [
+  {
+    id: 'central-walker',
+    path: [[-6.8, -6.8], [6.8, -6.8], [6.8, 6.8], [-6.8, 6.8]],
+    coatColor: '#d76d91',
+    umbrellaColor: '#ff9fc2',
+    speed: 1.15,
+    phase: 0.1,
+  },
+  {
+    id: 'plaza-visitor',
+    path: [[-4.6, 5.8]],
+    coatColor: '#6e72b5',
+    umbrellaColor: '#b6abff',
+    speed: 0,
+    phase: 0.3,
+  },
+  {
+    id: 'perimeter-gold',
+    path: perimeterPedestrianPath,
+    coatColor: '#d3a64f',
+    umbrellaColor: '#f0cf7e',
+    speed: 1.02,
+    phase: 0.03,
+  },
+  {
+    id: 'perimeter-cyan',
+    path: perimeterPedestrianPath,
+    coatColor: '#3ca5b4',
+    umbrellaColor: '#7be5ed',
+    speed: 1.12,
+    phase: 0.19,
+  },
+  {
+    id: 'perimeter-pink',
+    path: perimeterPedestrianPath,
+    coatColor: '#a75077',
+    umbrellaColor: '#ff79ac',
+    speed: 0.92,
+    phase: 0.36,
+  },
+  {
+    id: 'perimeter-lavender',
+    path: perimeterPedestrianPath,
+    coatColor: '#7774b8',
+    umbrellaColor: '#b9b3ff',
+    speed: 1.07,
+    phase: 0.52,
+  },
+  {
+    id: 'perimeter-green',
+    path: perimeterPedestrianPath,
+    coatColor: '#477c73',
+    umbrellaColor: '#83c9b8',
+    speed: 0.96,
+    phase: 0.7,
+  },
+  {
+    id: 'perimeter-coral',
+    path: perimeterPedestrianPath,
+    coatColor: '#bd655c',
+    umbrellaColor: '#ffab91',
+    speed: 1.16,
+    phase: 0.87,
+  },
+]
+
+function Pedestrian({ definition }: { definition: PedestrianDefinition }) {
+  const personRef = useRef<Group>(null)
+  const leftLegRef = useRef<Group>(null)
+  const rightLegRef = useRef<Group>(null)
+  const leftArmRef = useRef<Group>(null)
+  const rightArmRef = useRef<Group>(null)
+  const routeOffset = definition.phase * definition.path.length
+  const initialRouteSegment =
+    Math.floor(routeOffset) % definition.path.length
+  const routeSegment = useRef(initialRouteSegment)
+  const routeProgress = useRef(routeOffset % 1)
+
+  useFrame(({ clock }, delta) => {
+    const person = personRef.current
+
+    if (!person) {
+      return
+    }
+
+    const isWalking = definition.path.length > 1 && definition.speed > 0
+
+    if (isWalking) {
+      let start = definition.path[routeSegment.current]
+      let end = definition.path[(routeSegment.current + 1) % definition.path.length]
+      const segmentLength = Math.hypot(end[0] - start[0], end[1] - start[1])
+
+      routeProgress.current += (definition.speed * delta) / segmentLength
+
+      while (routeProgress.current >= 1) {
+        routeProgress.current -= 1
+        routeSegment.current =
+          (routeSegment.current + 1) % definition.path.length
+        start = definition.path[routeSegment.current]
+        end = definition.path[(routeSegment.current + 1) % definition.path.length]
+      }
+
+      person.position.set(
+        MathUtils.lerp(start[0], end[0], routeProgress.current),
+        0.16,
+        MathUtils.lerp(start[1], end[1], routeProgress.current),
+      )
+      person.rotation.y = Math.atan2(end[0] - start[0], end[1] - start[1])
+
+      const stride = Math.sin(
+        clock.elapsedTime * definition.speed * 7 + definition.phase * Math.PI * 2,
+      ) * 0.42
+
+      if (leftLegRef.current && rightLegRef.current) {
+        leftLegRef.current.rotation.x = stride
+        rightLegRef.current.rotation.x = -stride
+      }
+
+      if (leftArmRef.current && rightArmRef.current) {
+        leftArmRef.current.rotation.x = -stride * 0.55
+        rightArmRef.current.rotation.x = stride * 0.55
+      }
+    } else {
+      person.rotation.y =
+        definition.phase * Math.PI * 2 +
+        Math.sin(clock.elapsedTime * 0.45 + definition.phase * 4) * 0.08
+    }
+  })
+
+  const [initialX, initialZ] = definition.path[initialRouteSegment]
+
+  return (
+    <group ref={personRef} position={[initialX, 0.16, initialZ]} scale={0.62}>
+      <group ref={leftLegRef} position={[-0.16, 0.68, 0]}>
+        <mesh position={[0, -0.3, 0]}>
+          <boxGeometry args={[0.18, 0.6, 0.2]} />
+          <meshStandardMaterial color="#26354d" roughness={0.85} />
+        </mesh>
+      </group>
+      <group ref={rightLegRef} position={[0.16, 0.68, 0]}>
+        <mesh position={[0, -0.3, 0]}>
+          <boxGeometry args={[0.18, 0.6, 0.2]} />
+          <meshStandardMaterial color="#26354d" roughness={0.85} />
+        </mesh>
+      </group>
+
+      <mesh position={[0, 1.18, 0]}>
+        <capsuleGeometry args={[0.3, 0.62, 5, 10]} />
+        <meshStandardMaterial color={definition.coatColor} roughness={0.8} />
+      </mesh>
+
+      <group ref={leftArmRef} position={[-0.38, 1.35, 0]}>
+        <mesh position={[0, -0.27, 0]}>
+          <boxGeometry args={[0.14, 0.56, 0.16]} />
+          <meshStandardMaterial color={definition.coatColor} roughness={0.8} />
+        </mesh>
+      </group>
+      <group ref={rightArmRef} position={[0.38, 1.35, 0]}>
+        <mesh position={[0, -0.27, 0]}>
+          <boxGeometry args={[0.14, 0.56, 0.16]} />
+          <meshStandardMaterial color={definition.coatColor} roughness={0.8} />
+        </mesh>
+      </group>
+
+      <mesh position={[0, 1.88, 0]}>
+        <sphereGeometry args={[0.27, 12, 9]} />
+        <meshStandardMaterial color="#c98f70" roughness={0.9} />
+      </mesh>
+
+      {definition.umbrellaColor && (
+        <group position={[0.34, 2.02, 0]} rotation={[0, 0, -0.08]}>
+          <mesh position={[0, 0.25, 0]}>
+            <cylinderGeometry args={[0.025, 0.025, 1.25, 8]} />
+            <meshStandardMaterial color="#8995a4" metalness={0.5} />
+          </mesh>
+          <mesh position={[0, 0.9, 0]}>
+            <sphereGeometry args={[0.86, 18, 7, 0, Math.PI * 2, 0, Math.PI / 2]} />
+            <meshStandardMaterial
+              color={definition.umbrellaColor}
+              roughness={0.55}
+              side={2}
+            />
+          </mesh>
+        </group>
+      )}
+    </group>
+  )
+}
+
+function CityPeople() {
+  return (
+    <group>
+      {pedestrians.map((pedestrian) => (
+        <Pedestrian definition={pedestrian} key={pedestrian.id} />
+      ))}
+    </group>
+  )
+}
+
 type RoadProps = {
   position: [number, number]
   length: number
@@ -1762,6 +1980,7 @@ function CityScene({
       />
 
       <Rain />
+      <CityPeople />
 
       {/* The visible ground and its invisible physics floor */}
       <RigidBody type="fixed" colliders={false}>
