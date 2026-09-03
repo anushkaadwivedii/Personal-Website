@@ -9,12 +9,22 @@ function LandingPage() {
 
         <h1>Anushka Dwivedi</h1>
 
+        <div className="landing-introduction">
+          <p>
+            Hey, I’m Anushka! I’m a recent grad, and I made this portfolio to
+            share a little about myself and the things I’ve worked on.
+          </p>
+          <p>
+            There are two ways to explore it: you can stick with the classic
+            portfolio, or drive through the interactive city I built. I’ve
+            always loved big cities and rain, so I wanted to incorporate both
+            into the site. Each building represents a different section.
+          </p>
+          <p className="landing-signoff">Hope you enjoy it :)</p>
+        </div>
+
         <p className="landing-prompt">
           Choose your way in.
-        </p>
-
-        <p className="landing-description">
-          Take the quick route through my portfolio, or explore the city.
         </p>
       </header>
 
