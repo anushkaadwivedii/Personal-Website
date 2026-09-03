@@ -634,9 +634,10 @@
 
   .city-location-metric strong {
     color: #65e6f3;
-    font-size: 1.75rem;
-    line-height: 0.9;
-    letter-spacing: -0.04em;
+    font-size: 1.4rem;
+    font-weight: 650;
+    line-height: 1;
+    letter-spacing: -0.03em;
   }
 
   .city-location-metric span {

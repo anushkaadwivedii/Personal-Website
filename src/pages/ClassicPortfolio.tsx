@@ -10,8 +10,9 @@ const experiences = [
     location: 'Lucknow, India',
     type: 'Engineering',
     description: [
-      'I worked on a production testing platform used by more than 300 students. I built parts of the assessment experience in Angular and TypeScript, including timed tests, question navigation, answer saving, and submission workflows connected to .NET APIs.',
-      'I also investigated slow API calls by tracing requests from the frontend through the backend and identifying where they were getting held up. The fixes reduced API latency by 25%. Alongside development, I participated in code reviews and tested components before releases.',
+      'I worked on a production testing platform used by more than 300 students. Most of my work was on the assessment experience, where I built Angular and TypeScript components for timed tests, question navigation, answer saving, and submission workflows connected to .NET APIs.',
+      'Working on an existing production codebase also meant spending a fair amount of time figuring out why things were not behaving the way they should. For one performance issue, I traced slow requests from the frontend through the backend to find where they were getting held up. The resulting fixes reduced API latency by 25%.',
+      'I also participated in code reviews, tested components before releases, and worked with code that other people were actively building on rather than something I had designed from scratch.',
     ],
     skills: ['Angular', 'TypeScript', '.NET', 'REST APIs'],
   },
@@ -22,8 +23,9 @@ const experiences = [
     location: 'Madison, Wisconsin',
     type: 'Research',
     description: [
-      'I worked on a research project that used language models to extract and classify learning objectives from university course materials. I built a modular Python pipeline with more than 10 components for preprocessing, extraction, classification, and evaluation.',
-      'A large part of the work involved experimentation. I compared prompt designs and input configurations, examined where the model was making mistakes, and adjusted the pipeline based on those results. This improved classification accuracy by 80%.',
+      'I worked on a research project exploring how language models could be used to extract and classify learning objectives from university course materials. I built a modular Python pipeline with more than 10 components covering preprocessing, extraction, classification, and evaluation.',
+      'A lot of the work was experimental. I compared different prompt designs and input configurations, looked through cases where the model classified something incorrectly, and used those failures to decide what to try next. Through those experiments, I improved classification accuracy by 80%.',
+      'What I liked most about the project was that there usually was not an obvious correct implementation. A lot of the work was figuring out what to test, looking at the results, and iterating from there.',
     ],
     skills: ['Python', 'LangChain', 'Llama', 'LLMs'],
   },
@@ -35,7 +37,7 @@ const experiences = [
     type: 'Mentoring',
     description: [
       'I met one on one with students taking computer science and math courses, helping them work through topics such as recursion, object oriented programming, and algorithm design.',
-      'Every student understood material differently, so I learned to change how I explained a concept instead of repeating the same answer. We broke down assignments, traced through code together, and focused on helping students understand how to approach the next problem independently.',
+      'Every student understood material differently, so I learned to change how I explained a concept instead of repeating the same answer. We would trace through code, break problems into smaller pieces, and focus on understanding how to approach the next problem independently.',
     ],
     skills: ['Mentoring', 'Computer Science', 'Mathematics', 'Communication'],
   },
@@ -98,8 +100,6 @@ const projects: Project[] = [
       'The workflow is organized into six stages using LangGraph, which made it easier to control how information moves between repository analysis, retrieval, planning, editing, validation, and debugging. I used FAISS for semantic code search so the agent could find relevant files even when the user’s request did not contain the exact identifiers used in the codebase.',
       'I wanted every proposed change to remain reviewable and safe. CodePilot includes path traversal protection, dry run patch previews, structured code editing, and human approval before modifying files. When validation fails, it uses the test output to attempt a bounded repair instead of retrying indefinitely. I tested the system with 35 automated tests, including a multifile change with a twelve test suite and a case where it successfully recovered after one repair attempt.',
     ],
-    metric: '6',
-    metricLabel: 'stage agent workflow',
     skills: ['Python', 'LangGraph', 'FAISS', 'RAG', 'Pytest'],
     images: [],
     links: [
@@ -142,8 +142,6 @@ const projects: Project[] = [
       'The first execution uses an AI model to understand and operate the interface. Once the task succeeds, LedgerPilot stores the important actions and element locators so later runs can replay the same capability without calling the model again. The replay system uses ranked locators, checkpoints, and bounded retries to handle small changes in the interface without silently performing the wrong action.',
       'I designed the execution system around four possible outcomes: success, business exceptions, recoverable errors, and hard failures. I also added policy guardrails, sensitive data redaction, approval hashing for generated artifacts, and same session human handoff when the automation should not continue independently. The system is covered by 18 unit and browser integration tests across seven test suites.',
     ],
-    metric: '18',
-    metricLabel: 'automated tests',
     skills: ['TypeScript', 'Playwright', 'Zod', 'LLMs', 'Automation'],
     images: [],
     links: [

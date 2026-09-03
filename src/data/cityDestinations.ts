@@ -59,8 +59,9 @@ export const cityDestinations: CityDestination[] = [
     description:
       'I built production assessment workflows in Angular and TypeScript, connected them to .NET APIs, and helped reduce API latency by 25%.',
     details: [
-      'I worked on a production testing platform used by more than 300 students. I built parts of the assessment experience in Angular and TypeScript, including timed tests, question navigation, answer saving, and submission workflows connected to .NET APIs.',
-      'I also investigated slow API calls by tracing requests from the frontend through the backend and identifying where they were getting held up. The fixes reduced API latency by 25%. Alongside development, I participated in code reviews and tested components before releases.',
+      'I worked on a production testing platform used by more than 300 students. Most of my work was on the assessment experience, where I built Angular and TypeScript components for timed tests, question navigation, answer saving, and submission workflows connected to .NET APIs.',
+      'Working on an existing production codebase also meant spending a fair amount of time figuring out why things were not behaving the way they should. For one performance issue, I traced slow requests from the frontend through the backend to find where they were getting held up. The resulting fixes reduced API latency by 25%.',
+      'I also participated in code reviews, tested components before releases, and worked with code that other people were actively building on rather than something I had designed from scratch.',
     ],
     context: 'JUN — AUG 2025 · Software Development Engineer Intern · Lucknow, India',
     color: '#59452c',
@@ -79,8 +80,9 @@ export const cityDestinations: CityDestination[] = [
     description:
       'I built a modular Python and language-model pipeline for extracting and classifying learning objectives from university course materials.',
     details: [
-      'I worked on a research project that used language models to extract and classify learning objectives from university course materials. I built a modular Python pipeline with more than 10 components for preprocessing, extraction, classification, and evaluation.',
-      'A large part of the work involved experimentation. I compared prompt designs and input configurations, examined where the model was making mistakes, and adjusted the pipeline based on those results. This improved classification accuracy by 80%.',
+      'I worked on a research project exploring how language models could be used to extract and classify learning objectives from university course materials. I built a modular Python pipeline with more than 10 components covering preprocessing, extraction, classification, and evaluation.',
+      'A lot of the work was experimental. I compared different prompt designs and input configurations, looked through cases where the model classified something incorrectly, and used those failures to decide what to try next. Through those experiments, I improved classification accuracy by 80%.',
+      'What I liked most about the project was that there usually was not an obvious correct implementation. A lot of the work was figuring out what to test, looking at the results, and iterating from there.',
     ],
     context: 'SEP 2025 — MAY 2026 · Undergraduate Student Researcher · Madison, Wisconsin',
     color: '#655134',
@@ -100,7 +102,7 @@ export const cityDestinations: CityDestination[] = [
       'I mentored students one on one in computer science and mathematics, adapting explanations to how each student understood the material.',
     details: [
       'I met one on one with students taking computer science and math courses, helping them work through topics such as recursion, object oriented programming, and algorithm design.',
-      'Every student understood material differently, so I learned to change how I explained a concept instead of repeating the same answer. We broke down assignments, traced through code together, and focused on helping students understand how to approach the next problem independently.',
+      'Every student understood material differently, so I learned to change how I explained a concept instead of repeating the same answer. We would trace through code, break problems into smaller pieces, and focus on understanding how to approach the next problem independently.',
     ],
     context: 'SEP 2025 — MAY 2026 · Academic Peer Mentor · Madison, Wisconsin',
     color: '#4f402d',
@@ -153,8 +155,6 @@ export const cityDestinations: CityDestination[] = [
     buildingPosition: [14.5, 3.7, -31.5],
     buildingScale: [6, 7.4, 12],
     entrancePosition: [14.5, 0, -24.2],
-    metric: '6 stages',
-    metricLabel: 'in the agent workflow',
     skills: ['Python', 'LangGraph', 'FAISS', 'RAG', 'Pytest'],
     links: [
       {
@@ -205,8 +205,6 @@ export const cityDestinations: CityDestination[] = [
     buildingPosition: [35.5, 3.4, -31.5],
     buildingScale: [6, 6.8, 12],
     entrancePosition: [35.5, 0, -24.2],
-    metric: '18',
-    metricLabel: 'automated tests',
     skills: ['TypeScript', 'Playwright', 'Zod', 'LLMs', 'Automation'],
     links: [
       {
