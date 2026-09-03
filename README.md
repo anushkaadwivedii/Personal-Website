@@ -9,7 +9,7 @@ The interactive version turns the portfolio into a small explorable world with p
 
 ## Live site
 
-Deployment coming soon.
+[View the live portfolio](https://personal-website-lac-three-52.vercel.app/)
 
 ## Features
 
