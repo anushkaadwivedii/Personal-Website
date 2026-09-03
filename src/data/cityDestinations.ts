@@ -281,7 +281,7 @@ export const cityDestinations: CityDestination[] = [
     name: 'Crochet Shop',
     category: 'Crocheting',
     description:
-      'I mostly make plushies and tapestries, usually as gifts for people.',
+      'I mostly crochet plushies and tapestries, usually as gifts or just because I found something fun to make.',
     color: '#63334f',
     buildingPosition: [-7, 3.2, 31.5],
     buildingScale: [6, 6.4, 12],
@@ -299,7 +299,7 @@ export const cityDestinations: CityDestination[] = [
     name: 'After Hours Library',
     category: 'Reading',
     description:
-      'I read whenever I get the time, especially when I need a break from being on my laptop.',
+      'I read whenever I get the chance. Mostly fiction, and usually whatever sounds interesting at the time.',
     color: '#5a3850',
     buildingPosition: [-14.5, 4.2, 31.5],
     buildingScale: [6, 8.4, 12],
@@ -311,7 +311,7 @@ export const cityDestinations: CityDestination[] = [
     name: 'Cycle Hub',
     category: 'Cycling',
     description:
-      'I like going on long bike rides and using them as an excuse to explore somewhere new.',
+      'I like going on long bike rides, especially when I get to explore somewhere new.',
     color: '#6b3b56',
     buildingPosition: [-28, 2.6, 31.5],
     buildingScale: [6, 5.2, 12],
@@ -323,7 +323,7 @@ export const cityDestinations: CityDestination[] = [
     name: 'Music Room',
     category: 'Ukulele + guitar',
     description:
-      'I’ve been learning to play the ukulele and guitar, mostly through songs I already like.',
+      'I play ukulele and guitar, mostly learning songs I already like.',
     color: '#733f5c',
     buildingPosition: [-35.5, 3.7, 31.5],
     buildingScale: [6, 7.4, 12],
@@ -335,7 +335,7 @@ export const cityDestinations: CityDestination[] = [
     name: 'Gym',
     category: 'Strength training',
     description:
-      'I started strength training recently and have really been enjoying it.',
+      'I started going to the gym recently and ended up enjoying it more than I expected.',
     color: '#5f314b',
     buildingPosition: [-7, 2.8, 10.5],
     buildingScale: [6, 5.6, 12],
@@ -347,7 +347,7 @@ export const cityDestinations: CityDestination[] = [
     name: 'Night Kitchen',
     category: 'Cooking',
     description:
-      'I enjoy cooking and trying new vegetarian recipes, even if they don’t always turn out how I planned.',
+      'I like cooking and trying new vegetarian recipes. Some turn out better than others.',
     color: '#70435a',
     buildingPosition: [-14.5, 3.1, 10.5],
     buildingScale: [6, 6.2, 12],
@@ -359,11 +359,10 @@ export const cityDestinations: CityDestination[] = [
     name: 'About Gallery',
     category: 'A little about me',
     description:
-      'I am a recent UW Madison graduate who builds full stack software across AI, fintech, data, and backend systems.',
+      "I'm a recent UW–Madison graduate in Computer Science and Data Science, with a certificate in Business.",
     details: [
-      "I recently graduated from UW Madison with degrees in Computer Science and Data Science, along with a certificate in Business. Through my internship, research, and personal projects, I've worked across full stack development, AI, data, and backend systems.",
-      "I'm especially interested in AI and the different ways it can be built into real software. I also want to learn more about finance and business, which has led me to explore projects involving financial automation and market data alongside my other work.",
-      'During college, I was involved with Alpha Omega Epsilon, a professional and social sorority for women and underrepresented genders in STEM, and Women in Computing. I also spent a year mentoring students in computer science and math. Outside of work, I love music, crochet, exploring big cities, and taking on projects that are probably more ambitious than they need to be.',
+      "I like building software and exploring different areas of tech. Most of my recent projects have been around AI, full-stack development, and finance, but I'm usually working on something new.",
+      "Outside of coding, I like crocheting, reading, cooking, cycling, and playing guitar and ukulele. I've also recently started going to the gym.",
     ],
     color: '#3d3d68',
     buildingPosition: [10.5, 3.6, 31.5],
@@ -377,7 +376,7 @@ export const cityDestinations: CityDestination[] = [
     name: 'Graduation Park',
     category: 'UW Madison',
     description:
-      'The starting point for my story, featuring my graduation photo and the path that brought me here.',
+      'I graduated from UW–Madison in 2026 with degrees in Computer Science and Data Science and a certificate in Business.',
     color: '#4a456f',
     buildingPosition: [31.5, 1.8, 31.5],
     buildingScale: [12, 3.6, 12],
@@ -389,7 +388,7 @@ export const cityDestinations: CityDestination[] = [
     name: 'Résumé Station',
     category: 'Résumé',
     description:
-      'A quick stop for the conventional version of my experience and technical background.',
+      'My experience, projects, and technical background in one place.',
     color: '#45416e',
     buildingPosition: [10.5, 2.3, 10.5],
     buildingScale: [12, 4.6, 12],
@@ -402,7 +401,7 @@ export const cityDestinations: CityDestination[] = [
     name: 'Contact Kiosk',
     category: 'Find me online',
     description:
-      'GitHub, LinkedIn, and email links for continuing the conversation outside the city.',
+      "Feel free to reach out or check out what I'm working on.",
     color: '#3f476f',
     buildingPosition: [31.5, 2.8, 10.5],
     buildingScale: [12, 5.6, 12],

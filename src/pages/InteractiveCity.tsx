@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Html, Instance, Instances, useGLTF } from '@react-three/drei'
 import {
@@ -31,7 +32,7 @@ type BuildingProps = {
   isOcclusionRoot?: boolean
 }
 
-const BUILDING_HEIGHT_MULTIPLIER = 1.28
+const BUILDING_HEIGHT_MULTIPLIER = 1.4
 const ROAD_COORDINATES = [-42, -21, 0, 21, 42]
 const RAIN_DROP_COUNT = 1300
 
@@ -460,7 +461,7 @@ function BuildingIdentitySign({
   }
 
   return (
-    <Html position={position} center distanceFactor={11} occlude>
+    <Html position={position} center distanceFactor={15} occlude>
       <div
         className="city-building-sign"
         style={{ borderColor: color, color }}
@@ -1291,7 +1292,17 @@ type CarProps = {
   onMapPositionChange: (position: [number, number]) => void
   isDestinationOpen: boolean
   onCloseDestination: () => void
+  mobileControls: React.RefObject<MobileControlState>
 }
+
+type MobileControlState = {
+  forward: boolean
+  backward: boolean
+  left: boolean
+  right: boolean
+}
+
+type MobileMovementControl = keyof MobileControlState
 
 function getCurrentArea(x: number, z: number) {
   if (z > 40 && Math.abs(x) < 8) {
@@ -1332,6 +1343,7 @@ function Car({
   onMapPositionChange,
   isDestinationOpen,
   onCloseDestination,
+  mobileControls,
 }: CarProps) {
   const carRef = useRef<RapierRigidBody>(null)
   const carVisualRef = useRef<Group>(null)
@@ -1419,19 +1431,23 @@ function Car({
 
     const movingLeft =
       pressedKeys.current.has('arrowleft') ||
-      pressedKeys.current.has('a')
+      pressedKeys.current.has('a') ||
+      mobileControls.current.left
 
     const movingRight =
       pressedKeys.current.has('arrowright') ||
-      pressedKeys.current.has('d')
+      pressedKeys.current.has('d') ||
+      mobileControls.current.right
 
     const movingForward =
       pressedKeys.current.has('arrowup') ||
-      pressedKeys.current.has('w')
+      pressedKeys.current.has('w') ||
+      mobileControls.current.forward
 
     const movingBackward =
       pressedKeys.current.has('arrowdown') ||
-      pressedKeys.current.has('s')
+      pressedKeys.current.has('s') ||
+      mobileControls.current.backward
 
     const throttleDirection =
       Number(movingForward) - Number(movingBackward)
@@ -1693,6 +1709,7 @@ type CitySceneProps = {
   onMapPositionChange: (position: [number, number]) => void
   isDestinationOpen: boolean
   onCloseDestination: () => void
+  mobileControls: React.RefObject<MobileControlState>
 }
 
 function CityScene({
@@ -1702,6 +1719,7 @@ function CityScene({
   onMapPositionChange,
   isDestinationOpen,
   onCloseDestination,
+  mobileControls,
 }: CitySceneProps) {
   const blockCoordinates = [-31.5, -10.5, 10.5, 31.5]
 
@@ -1827,6 +1845,7 @@ function CityScene({
         onMapPositionChange={onMapPositionChange}
         isDestinationOpen={isDestinationOpen}
         onCloseDestination={onCloseDestination}
+        mobileControls={mobileControls}
       />
 
     </>
@@ -1877,6 +1896,7 @@ function fadeAudioVolume(
 }
 
 function InteractiveCity() {
+  const navigate = useNavigate()
   const [nearbyDestination, setNearbyDestination] =
     useState<CityDestination | null>(null)
   const [activeDestination, setActiveDestination] =
@@ -1888,9 +1908,65 @@ function InteractiveCity() {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const musicRef = useRef<HTMLAudioElement>(null)
   const cancelMusicFadeRef = useRef<(() => void) | null>(null)
+  const hasStartedMusicRef = useRef(false)
+  const mobileControls = useRef<MobileControlState>({
+    forward: false,
+    backward: false,
+    left: false,
+    right: false,
+  })
   const closeDestination = useCallback(() => {
     setActiveDestination(null)
   }, [])
+  const setMobileControl = useCallback(
+    (control: MobileMovementControl, isPressed: boolean) => {
+      mobileControls.current[control] = isPressed
+    },
+    [],
+  )
+  const resetMobileControls = useCallback(() => {
+    mobileControls.current.forward = false
+    mobileControls.current.backward = false
+    mobileControls.current.left = false
+    mobileControls.current.right = false
+  }, [])
+  const exploreFromMobile = useCallback(() => {
+    resetMobileControls()
+
+    if (activeDestination) {
+      closeDestination()
+      return
+    }
+
+    if (nearbyDestination) {
+      setActiveDestination(nearbyDestination)
+    }
+  }, [activeDestination, closeDestination, nearbyDestination, resetMobileControls])
+
+  const startMusic = useCallback(async () => {
+    const music = musicRef.current
+
+    if (!music) {
+      return false
+    }
+
+    cancelMusicFadeRef.current?.()
+    music.volume = 0
+
+    try {
+      await music.play()
+      hasStartedMusicRef.current = true
+      cancelMusicFadeRef.current = fadeAudioVolume(
+        music,
+        musicVolume,
+        700,
+      )
+      return true
+    } catch {
+      setIsMusicPlaying(false)
+      return false
+    }
+  }, [musicVolume])
 
   const toggleMusic = useCallback(async () => {
     const music = musicRef.current
@@ -1899,30 +1975,17 @@ function InteractiveCity() {
       return
     }
 
-    cancelMusicFadeRef.current?.()
-
     if (music.paused) {
-      music.volume = 0
-
-      try {
-        await music.play()
-        cancelMusicFadeRef.current = fadeAudioVolume(
-          music,
-          musicVolume,
-          700,
-        )
-      } catch {
-        setIsMusicPlaying(false)
-      }
-
+      await startMusic()
       return
     }
 
+    cancelMusicFadeRef.current?.()
     cancelMusicFadeRef.current = fadeAudioVolume(music, 0, 450, () => {
       music.pause()
       music.volume = musicVolume
     })
-  }, [musicVolume])
+  }, [musicVolume, startMusic])
 
   const updateMusicVolume = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1937,6 +2000,33 @@ function InteractiveCity() {
     },
     [],
   )
+
+  useEffect(() => {
+    if (hasStartedMusicRef.current) {
+      return
+    }
+
+    const removeStartListeners = () => {
+      window.removeEventListener('pointerdown', startAfterInteraction)
+      window.removeEventListener('keydown', startAfterInteraction)
+    }
+    const attemptAutomaticStart = async () => {
+      const started = await startMusic()
+
+      if (started) {
+        removeStartListeners()
+      }
+    }
+    function startAfterInteraction() {
+      void attemptAutomaticStart()
+    }
+
+    window.addEventListener('pointerdown', startAfterInteraction)
+    window.addEventListener('keydown', startAfterInteraction)
+    void attemptAutomaticStart()
+
+    return removeStartListeners
+  }, [startMusic])
 
   useEffect(() => {
     const music = musicRef.current
@@ -1966,11 +2056,24 @@ function InteractiveCity() {
     }
   }, [musicVolume])
 
+  useEffect(() => {
+    window.addEventListener('pointerup', resetMobileControls)
+    window.addEventListener('pointercancel', resetMobileControls)
+    window.addEventListener('blur', resetMobileControls)
+
+    return () => {
+      window.removeEventListener('pointerup', resetMobileControls)
+      window.removeEventListener('pointercancel', resetMobileControls)
+      window.removeEventListener('blur', resetMobileControls)
+    }
+  }, [resetMobileControls])
+
   return (
     <main className="interactive-city-page">
       <audio
         ref={musicRef}
         src={CITY_MUSIC_SRC}
+        autoPlay
         loop
         preload="metadata"
         onPlay={() => setIsMusicPlaying(true)}
@@ -1987,6 +2090,7 @@ function InteractiveCity() {
               onMapPositionChange={setCarPosition}
               isDestinationOpen={activeDestination !== null}
               onCloseDestination={closeDestination}
+              mobileControls={mobileControls}
             />
           </Physics>
         </Canvas>
@@ -1997,26 +2101,28 @@ function InteractiveCity() {
         <strong>{currentArea}</strong>
       </div>
 
+      <button
+        type="button"
+        className="interactive-city-exit"
+        onClick={() => navigate('/', { replace: true })}
+      >
+        <span aria-hidden="true">←</span>
+        Exit city
+      </button>
+
       <div className="interactive-city-audio" aria-label="City soundtrack">
         <button
           type="button"
           className="interactive-city-audio-toggle"
-          aria-label={isMusicPlaying ? 'Pause city music' : 'Play city music'}
+          aria-label={isMusicPlaying ? 'Stop city music' : 'Resume city music'}
           aria-pressed={isMusicPlaying}
           onClick={toggleMusic}
         >
-          <span aria-hidden="true">{isMusicPlaying ? 'Ⅱ' : '▶'}</span>
+          <span aria-hidden="true">{isMusicPlaying ? '■' : '▶'}</span>
         </button>
 
         <div className="interactive-city-audio-title">
-          <strong>Velvet Rain</strong>
-          <a
-            href="https://pixabay.com/music/beats-velvet-rain-chill-lo-fi-rainy-night-beat-350255/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            VibeVault5 · Pixabay
-          </a>
+          <strong>Music</strong>
         </div>
 
         <input
@@ -2035,6 +2141,65 @@ function InteractiveCity() {
         isOpen={isMapOpen}
         onToggle={() => setIsMapOpen((isOpen) => !isOpen)}
       />
+
+      <div className="interactive-city-mobile-controls" aria-label="Driving controls">
+        <div className="mobile-drive-pad">
+          <button
+            type="button"
+            className="mobile-control-up"
+            aria-label="Drive forward"
+            onPointerDown={() => setMobileControl('forward', true)}
+            onPointerUp={() => setMobileControl('forward', false)}
+            onPointerCancel={() => setMobileControl('forward', false)}
+            onPointerLeave={() => setMobileControl('forward', false)}
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            className="mobile-control-left"
+            aria-label="Steer left"
+            onPointerDown={() => setMobileControl('left', true)}
+            onPointerUp={() => setMobileControl('left', false)}
+            onPointerCancel={() => setMobileControl('left', false)}
+            onPointerLeave={() => setMobileControl('left', false)}
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            className="mobile-control-down"
+            aria-label="Reverse"
+            onPointerDown={() => setMobileControl('backward', true)}
+            onPointerUp={() => setMobileControl('backward', false)}
+            onPointerCancel={() => setMobileControl('backward', false)}
+            onPointerLeave={() => setMobileControl('backward', false)}
+          >
+            ↓
+          </button>
+          <button
+            type="button"
+            className="mobile-control-right"
+            aria-label="Steer right"
+            onPointerDown={() => setMobileControl('right', true)}
+            onPointerUp={() => setMobileControl('right', false)}
+            onPointerCancel={() => setMobileControl('right', false)}
+            onPointerLeave={() => setMobileControl('right', false)}
+          >
+            →
+          </button>
+        </div>
+
+        <button
+          type="button"
+          className="mobile-explore-button"
+          disabled={!nearbyDestination && !activeDestination}
+          onClick={exploreFromMobile}
+        >
+          <span>Explore</span>
+          <small>{nearbyDestination?.name ?? 'Move closer'}</small>
+        </button>
+      </div>
 
       {nearbyDestination && !activeDestination && (
         <div className="interactive-city-prompt" role="status">
